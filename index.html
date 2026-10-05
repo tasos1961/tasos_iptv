@@ -92,8 +92,13 @@ function renderList() {
         };
 
         div.onclick = () => {
-            playChannel(i);
-        };
+    if (ch.name.toLowerCase().includes("ant1")) {
+        window.open("https://www.antenna.gr/live", "_blank");
+    } else {
+        playChannel(i);
+    }
+};
+
 
         div.onkeydown = (e) => {
             if (e.key === "Enter") {
