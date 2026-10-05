@@ -17,21 +17,19 @@ body {
     overflow: hidden;
 }
 
-/* --- FIXIERTE LISTE LINKS --- */
 #list {
     width: 35%;
-    height: 100vh;              /* feste Höhe für VIDAA */
+    height: 100vh;
     background: #111;
     padding: 10px;
-    overflow-y: scroll;         /* Scrollen erzwingen */
+    overflow-y: scroll;
     overflow-x: hidden;
-    -webkit-overflow-scrolling: touch; /* wichtig für VIDAA */
-    position: fixed;            /* Liste bleibt fixiert */
+    -webkit-overflow-scrolling: touch;
+    position: fixed;
     left: 0;
     top: 0;
 }
 
-/* --- VIDEO RECHTS --- */
 #video {
     position: absolute;
     right: 0;
@@ -66,14 +64,34 @@ const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a
 let channels = [];
 let hls = null;
 
-/* ---------------- PLAYLIST LADEN ---------------- */
+/* --- Web-Only Sender --- */
+const webOnlyChannels = {
+    "ant1": "https://www.antenna.gr/live",
+    "pontos": "https://www.youtube.com/@PontosTV/live",
+    "MAD": "https://www.mad.tv/live",
+    "nrg": "http://www.youtube.com/@NRG919/live",
+    "euronews": "https://www.euronews.com/live"
+};
+
+/* --- Video stoppen --- */
+function stopVideo() {
+    const video = document.getElementById("video");
+    video.pause();
+    video.src = "";
+    if (hls) {
+        hls.destroy();
+        hls = null;
+    }
+}
+
+/* --- Playlist laden --- */
 function loadPlaylist() {
     fetch(playlistURL)
         .then(r => r.text())
         .then(t => parseM3U(t));
 }
 
-/* ---------------- ROBUSTER M3U-PARSER ---------------- */
+/* --- M3U Parser --- */
 function parseM3U(data) {
     const lines = data.split(/\r?\n/);
     let name = "";
@@ -92,13 +110,12 @@ function parseM3U(data) {
 
     renderList();
 
-    /* --- AUTO-PLAY: Ersten Kanal automatisch starten --- */
     if (channels.length > 0) {
         playChannel(0);
     }
 }
 
-/* ---------------- LISTE RENDERN ---------------- */
+/* --- Liste rendern --- */
 function renderList() {
     const list = document.getElementById("list");
     list.innerHTML = "";
@@ -109,47 +126,33 @@ function renderList() {
         div.className = "channel";
         div.tabIndex = 0;
 
-        /* --- KLICK --- */
         div.onclick = () => {
-            if (ch.name.toLowerCase().includes("ant1")) {
+            const name = ch.name.toLowerCase();
 
-                /* --- VIDEO STOPPEN --- */
-                const video = document.getElementById("video");
-                video.pause();
-                video.src = "";
-
-                if (hls) {
-                    hls.destroy();
-                    hls = null;
+            for (const key in webOnlyChannels) {
+                if (name.includes(key)) {
+                    stopVideo();
+                    window.location.href = webOnlyChannels[key];
+                    return;
                 }
-
-                /* --- ANT1 IM GLEICHEN MENÜ ÖFFNEN --- */
-                window.location.href = "https://www.antenna.gr/live";
-
-            } else {
-                playChannel(i);
             }
+
+            playChannel(i);
         };
 
-        /* --- ENTER-TASTE --- */
         div.onkeydown = (e) => {
             if (e.key === "Enter") {
-                if (ch.name.toLowerCase().includes("ant1")) {
+                const name = ch.name.toLowerCase();
 
-                    const video = document.getElementById("video");
-                    video.pause();
-                    video.src = "";
-
-                    if (hls) {
-                        hls.destroy();
-                        hls = null;
+                for (const key in webOnlyChannels) {
+                    if (name.includes(key)) {
+                        stopVideo();
+                        window.location.href = webOnlyChannels[key];
+                        return;
                     }
-
-                    window.location.href = "https://www.antenna.gr/live";
-
-                } else {
-                    playChannel(i);
                 }
+
+                playChannel(i);
             }
         };
 
@@ -161,7 +164,7 @@ function renderList() {
     }
 }
 
-/* ---------------- KANAL ABSPIELEN ---------------- */
+/* --- Kanal abspielen --- */
 function playChannel(i) {
     const video = document.getElementById("video");
     const url = channels[i].url;
@@ -186,3 +189,4 @@ loadPlaylist();
 
 </body>
 </html>
+
