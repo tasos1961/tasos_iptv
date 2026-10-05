@@ -17,14 +17,29 @@ body {
     overflow: hidden;
 }
 
+/* --- FIXIERTE LISTE LINKS --- */
 #list {
     width: 35%;
+    height: 100vh;              /* feste Höhe für VIDAA */
     background: #111;
     padding: 10px;
-    overflow-y: auto;
+    overflow-y: scroll;         /* Scrollen erzwingen */
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* wichtig für VIDAA */
+    position: fixed;            /* Liste bleibt fixiert */
+    left: 0;
+    top: 0;
 }
 
+/* --- VIDEO RECHTS --- */
+#video {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 65%;
+    height: 100vh;
+    background: #000;
+}
 
 .channel {
     padding: 18px;
@@ -36,12 +51,6 @@ body {
 
 .channel:focus {
     background: #444;
-}
-
-#video {
-    width: 65%;
-    height: 100vh;
-    background: #000;
 }
 </style>
 </head>
@@ -66,11 +75,11 @@ function loadPlaylist() {
 
 /* ---------------- ROBUSTER M3U-PARSER ---------------- */
 function parseM3U(data) {
-    const lines = data.split(/\r?\n/); // unterstützt alle Zeilenenden
+    const lines = data.split(/\r?\n/);
     let name = "";
 
     lines.forEach(line => {
-        line = line.trim(); // entfernt BOM, Leerzeichen, Unicode
+        line = line.trim();
 
         if (line.startsWith("#EXTINF")) {
             const parts = line.split(",");
@@ -82,6 +91,11 @@ function parseM3U(data) {
     });
 
     renderList();
+
+    /* --- AUTO-PLAY: Ersten Kanal automatisch starten --- */
+    if (channels.length > 0) {
+        playChannel(0);
+    }
 }
 
 /* ---------------- LISTE RENDERN ---------------- */
@@ -95,11 +109,6 @@ function renderList() {
         div.className = "channel";
         div.tabIndex = 0;
 
-        div.onfocus = () => {
-            ensureVisible(div);
-        };
-
-        /* --- Klick auf Kanal --- */
         div.onclick = () => {
             if (ch.name.toLowerCase().includes("ant1")) {
                 window.open("https://www.antenna.gr/live", "_blank");
@@ -108,7 +117,6 @@ function renderList() {
             }
         };
 
-        /* --- Enter-Taste --- */
         div.onkeydown = (e) => {
             if (e.key === "Enter") {
                 if (ch.name.toLowerCase().includes("ant1")) {
@@ -124,20 +132,6 @@ function renderList() {
 
     if (list.children.length > 0) {
         list.children[0].focus();
-    }
-}
-
-/* ---------------- AUTOMATISCH SCROLLEN ---------------- */
-function ensureVisible(element) {
-    const list = document.getElementById("list");
-    const rect = element.getBoundingClientRect();
-    const listRect = list.getBoundingClientRect();
-
-    if (rect.bottom > listRect.bottom) {
-        list.scrollBy({ top: rect.bottom - listRect.bottom, behavior: "smooth" });
-    }
-    if (rect.top < listRect.top) {
-        list.scrollBy({ top: rect.top - listRect.top, behavior: "smooth" });
     }
 }
 
