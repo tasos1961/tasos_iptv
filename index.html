@@ -29,6 +29,7 @@ body {
     font-size: 22px;
     border-bottom: 1px solid #333;
     outline: none;
+    cursor: pointer;
 }
 
 .channel:focus {
@@ -61,15 +62,20 @@ function loadPlaylist() {
         .then(t => parseM3U(t));
 }
 
+/* ---------------- ROBUSTER M3U-PARSER ---------------- */
 function parseM3U(data) {
-    const lines = data.split("\n");
+    const lines = data.split(/\r?\n/); // unterstützt alle Zeilenenden
     let name = "";
 
     lines.forEach(line => {
+        line = line.trim(); // entfernt BOM, Leerzeichen, Unicode
+
         if (line.startsWith("#EXTINF")) {
-            name = line.split(",")[1];
-        } else if (line.startsWith("http")) {
-            channels.push({ name, url: line.trim() });
+            const parts = line.split(",");
+            name = parts.length > 1 ? parts[1].trim() : "Unbenannt";
+        } 
+        else if (line.startsWith("http://") || line.startsWith("https://")) {
+            channels.push({ name, url: line });
         }
     });
 
@@ -85,32 +91,38 @@ function renderList() {
         const div = document.createElement("div");
         div.textContent = ch.name;
         div.className = "channel";
-        div.tabIndex = 0; // TV-Fokus aktivieren
+        div.tabIndex = 0;
 
         div.onfocus = () => {
             ensureVisible(div);
         };
 
+        /* --- Klick auf Kanal --- */
         div.onclick = () => {
-    if (ch.name.toLowerCase().includes("ant1")) {
-        window.open("https://www.antenna.gr/live", "_blank");
-    } else {
-        playChannel(i);
-    }
-};
+            if (ch.name.toLowerCase().includes("ant1")) {
+                window.open("https://www.antenna.gr/live", "_blank");
+            } else {
+                playChannel(i);
+            }
+        };
 
-
+        /* --- Enter-Taste --- */
         div.onkeydown = (e) => {
             if (e.key === "Enter") {
-                playChannel(i);
+                if (ch.name.toLowerCase().includes("ant1")) {
+                    window.open("https://www.antenna.gr/live", "_blank");
+                } else {
+                    playChannel(i);
+                }
             }
         };
 
         list.appendChild(div);
     });
 
-    // Ersten Kanal fokussieren
-    list.children[0].focus();
+    if (list.children.length > 0) {
+        list.children[0].focus();
+    }
 }
 
 /* ---------------- AUTOMATISCH SCROLLEN ---------------- */
