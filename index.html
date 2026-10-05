@@ -109,18 +109,44 @@ function renderList() {
         div.className = "channel";
         div.tabIndex = 0;
 
+        /* --- KLICK --- */
         div.onclick = () => {
             if (ch.name.toLowerCase().includes("ant1")) {
-                window.open("https://www.antenna.gr/live", "_blank");
+
+                /* --- VIDEO STOPPEN --- */
+                const video = document.getElementById("video");
+                video.pause();
+                video.src = "";
+
+                if (hls) {
+                    hls.destroy();
+                    hls = null;
+                }
+
+                /* --- ANT1 IM GLEICHEN MENÜ ÖFFNEN --- */
+                window.location.href = "https://www.antenna.gr/live";
+
             } else {
                 playChannel(i);
             }
         };
 
+        /* --- ENTER-TASTE --- */
         div.onkeydown = (e) => {
             if (e.key === "Enter") {
                 if (ch.name.toLowerCase().includes("ant1")) {
-                    window.open("https://www.antenna.gr/live", "_blank");
+
+                    const video = document.getElementById("video");
+                    video.pause();
+                    video.src = "";
+
+                    if (hls) {
+                        hls.destroy();
+                        hls = null;
+                    }
+
+                    window.location.href = "https://www.antenna.gr/live";
+
                 } else {
                     playChannel(i);
                 }
