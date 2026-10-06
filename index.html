@@ -31,14 +31,27 @@ body {
     top: 0;
 }
 
-/* --- VIDEO RECHTS --- */
-#video {
+/* --- VIDEO / IFRAME RECHTS --- */
+#playerArea {
     position: absolute;
     right: 0;
     top: 0;
     width: 65%;
     height: 100vh;
     background: #000;
+}
+
+#video {
+    width: 100%;
+    height: 100%;
+    background: #000;
+}
+
+#iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: none;
 }
 
 .channel {
@@ -58,7 +71,11 @@ body {
 <body>
 
 <div id="list"></div>
-<video id="video" controls autoplay></video>
+
+<div id="playerArea">
+    <video id="video" controls autoplay></video>
+    <iframe id="iframe"></iframe>
+</div>
 
 <script>
 const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
@@ -68,18 +85,19 @@ let hls = null;
 
 /* --- Web-Only Sender (lowercase keys!) --- */
 const webOnlyChannels = {
-    "ant1": "https://www.antenna.gr/live",
-    "pontos": "https://www.youtube.com/@PontosTV/live",
-    "mad": "https://www.mad.tv/live",
-    "nrg": "http://tv.nrg91.gr:1935/onweb/live/master.m3u8",
-    "euronews": "https://www.euronews.com/live"
+    "ant1": "https://www.antenna.gr/live"
 };
 
 /* --- Video stoppen --- */
 function stopVideo() {
     const video = document.getElementById("video");
+    const iframe = document.getElementById("iframe");
+
     video.pause();
     video.src = "";
+    iframe.src = "";
+    iframe.style.display = "none";
+
     if (hls) {
         hls.destroy();
         hls = null;
@@ -129,35 +147,11 @@ function renderList() {
         div.tabIndex = 0;
 
         /* --- KLICK --- */
-        div.onclick = () => {
-            const name = ch.name.toLowerCase();
-
-            for (const key in webOnlyChannels) {
-                if (name.includes(key)) {
-                    stopVideo();
-                    window.location.href = webOnlyChannels[key];
-                    return;
-                }
-            }
-
-            playChannel(i);
-        };
+        div.onclick = () => handleChannel(ch, i);
 
         /* --- ENTER-TASTE --- */
         div.onkeydown = (e) => {
-            if (e.key === "Enter") {
-                const name = ch.name.toLowerCase();
-
-                for (const key in webOnlyChannels) {
-                    if (name.includes(key)) {
-                        stopVideo();
-                        window.location.href = webOnlyChannels[key];
-                        return;
-                    }
-                }
-
-                playChannel(i);
-            }
+            if (e.key === "Enter") handleChannel(ch, i);
         };
 
         list.appendChild(div);
@@ -168,10 +162,31 @@ function renderList() {
     }
 }
 
+/* --- Kanal-Handler --- */
+function handleChannel(ch, i) {
+    const name = ch.name.toLowerCase();
+
+    for (const key in webOnlyChannels) {
+        if (name.includes(key)) {
+            stopVideo();
+            const iframe = document.getElementById("iframe");
+            iframe.src = webOnlyChannels[key];
+            iframe.style.display = "block";
+            return;
+        }
+    }
+
+    playChannel(i);
+}
+
 /* --- Kanal abspielen --- */
 function playChannel(i) {
     const video = document.getElementById("video");
+    const iframe = document.getElementById("iframe");
     const url = channels[i].url;
+
+    iframe.style.display = "none";
+    iframe.src = "";
 
     if (hls) {
         hls.destroy();
