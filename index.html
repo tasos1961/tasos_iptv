@@ -52,7 +52,7 @@ body {
 
 #iframe {
     border: none;
-    display: none; /* nur verstecken, NICHT löschen */
+    display: none;
 }
 
 .channel {
@@ -80,7 +80,7 @@ body {
     border: 1px solid #666;
     border-radius: 6px;
     cursor: pointer;
-    display: none; /* wird dynamisch angezeigt */
+    display: none;
 }
 </style>
 </head>
@@ -101,7 +101,7 @@ const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a
 let channels = [];
 let hls = null;
 
-/* --- Web-Only Sender (lowercase keys!) --- */
+/* --- Web-Only Sender --- */
 const webOnlyChannels = {
     "mega hd": "https://www.megatv.com/live",
     "ant1": "https://www.antenna.gr/live",
@@ -114,14 +114,9 @@ const webOnlyChannels = {
 /* --- Video stoppen --- */
 function stopVideo() {
     const video = document.getElementById("video");
-
     video.pause();
     video.src = "";
-
-    if (hls) {
-        hls.destroy();
-        hls = null;
-    }
+    if (hls) { hls.destroy(); hls = null; }
 }
 
 /* --- Playlist laden --- */
@@ -138,21 +133,16 @@ function parseM3U(data) {
 
     lines.forEach(line => {
         line = line.trim();
-
         if (line.startsWith("#EXTINF")) {
             const parts = line.split(",");
             name = parts.length > 1 ? parts[1].trim() : "Unbenannt";
-        } 
-        else if (line.startsWith("http://") || line.startsWith("https://")) {
+        } else if (line.startsWith("http://") || line.startsWith("https://")) {
             channels.push({ name, url: line });
         }
     });
 
     renderList();
-
-    if (channels.length > 0) {
-        playChannel(0);
-    }
+    if (channels.length > 0) playChannel(0);
 }
 
 /* --- Liste rendern --- */
@@ -167,25 +157,20 @@ function renderList() {
         div.tabIndex = 0;
 
         div.onclick = () => handleChannel(ch, i);
-
-        div.onkeydown = (e) => {
-            if (e.key === "Enter") handleChannel(ch, i);
-        };
+        div.onkeydown = (e) => { if (e.key === "Enter") handleChannel(ch, i); };
 
         list.appendChild(div);
     });
 
-    if (list.children.length > 0) {
-        list.children[0].focus();
-    }
+    if (list.children.length > 0) list.children[0].focus();
 }
 
-/* --- Kanal-Handler (Variante B + MEGA HD Fix + Mega News Fix) --- */
+/* --- Kanal-Handler --- */
 function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
 
-    /* --- MEGA HD → Webseite --- */
+    /* --- MEGA HD --- */
     if (name === "mega hd") {
         stopVideo();
         iframe.style.display = "block";
@@ -194,7 +179,7 @@ function handleChannel(ch, i) {
         return;
     }
 
-    /* --- Mega News → HLS Stream --- */
+    /* --- Mega News (HLS) --- */
     if (name === "mega news") {
         iframe.style.display = "none";
         playChannel(i);
@@ -202,7 +187,7 @@ function handleChannel(ch, i) {
         return;
     }
 
-    /* --- Andere WebOnly-Sender --- */
+    /* --- Andere Web-Sender --- */
     for (const key in webOnlyChannels) {
         if (name === key) {
             stopVideo();
@@ -224,10 +209,7 @@ function playChannel(i) {
     const video = document.getElementById("video");
     const url = channels[i].url;
 
-    if (hls) {
-        hls.destroy();
-        hls = null;
-    }
+    if (hls) { hls.destroy(); hls = null; }
 
     if (Hls.isSupported()) {
         hls = new Hls();
@@ -239,7 +221,7 @@ function playChannel(i) {
     }
 }
 
-/* --- Fullscreen für iFrame per Maus --- */
+/* --- Fullscreen per Maus --- */
 function enterFullscreen() {
     const iframe = document.getElementById("iframe");
     if (iframe.style.display === "block") {
@@ -249,20 +231,66 @@ function enterFullscreen() {
     }
 }
 
-/* Button-Klick */
 document.getElementById("fsBtn").onclick = enterFullscreen;
 
-/* Button anzeigen/verstecken */
+/* --- Fullscreen Button anzeigen --- */
 function updateFullscreenButton() {
     const iframe = document.getElementById("iframe");
     const fsBtn = document.getElementById("fsBtn");
-
-    if (iframe.style.display === "block") {
-        fsBtn.style.display = "block";
-    } else {
-        fsBtn.style.display = "none";
-    }
+    fsBtn.style.display = iframe.style.display === "block" ? "block" : "none";
 }
+
+/* --- Popup-Blocker für MEGA HD --- */
+function megaPopupBlocker() {
+    const iframe = document.getElementById("iframe");
+    if (iframe.style.display !== "block") return;
+
+    try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+        /* Buttons suchen */
+        const closeBtn = doc.querySelector(
+            'button[aria-label="Close"], .close, .popup-close, .mfp-close'
+        );
+
+        if (closeBtn) {
+            closeBtn.click();
+            console.log("MEGA Popup geschlossen");
+        }
+
+        /* Falls kein Button → Popup verstecken */
+        const popup = doc.querySelector('.modal, .popup, .newsletter, .insider');
+        if (popup) {
+            popup.style.display = "none";
+            console.log("MEGA Popup versteckt");
+        }
+
+    } catch (e) {}
+}
+
+setInterval(megaPopupBlocker, 2000);
+
+/* --- Auto-Reconnect für MEGA HD / ANT1 --- */
+function autoReconnect() {
+    const iframe = document.getElementById("iframe");
+    if (iframe.style.display !== "block") return;
+
+    try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const text = doc.body ? doc.body.innerText.toLowerCase() : "";
+
+        if (text.includes("forbidden") ||
+            text.includes("permission") ||
+            text.includes("error")) {
+
+            console.log("Auto-Reconnect ausgelöst");
+            iframe.src = iframe.src;
+        }
+    } catch (e) {}
+
+}
+
+setInterval(autoReconnect, 180000); // alle 3 Minuten
 
 loadPlaylist();
 </script>
