@@ -84,7 +84,7 @@ const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a
 let channels = [];
 let hls = null;
 
-/* --- Web-Only Sender (nur MEGA HD, NICHT Mega News!) --- */
+/* --- Web-Only Sender (lowercase keys!) --- */
 const webOnlyChannels = {
     "mega hd": "https://www.megatv.com/live",
     "ant1": "https://www.antenna.gr/live",
@@ -162,7 +162,6 @@ function renderList() {
         list.children[0].focus();
     }
 }
-
 /* --- Kanal-Handler (Variante B + MEGA HD Fix + Mega News Fix) --- */
 function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
@@ -197,6 +196,33 @@ function handleChannel(ch, i) {
     iframe.style.display = "none";
     playChannel(i);
 }
+/* --- Kanal-Handler (Variante B) --- */
+function handleChannel(ch, i) {
+    const name = ch.name.toLowerCase();
+    const iframe = document.getElementById("iframe");
+
+    for (const key in webOnlyChannels) {
+        if (name.includes(key)) {
+
+            stopVideo();
+
+            /* iFrame NICHT löschen – nur sichtbar machen */
+            iframe.style.display = "block";
+
+            /* Nur ändern, wenn ein anderer Web-Sender gewählt wurde */
+            if (iframe.src !== webOnlyChannels[key]) {
+                iframe.src = webOnlyChannels[key];
+            }
+
+            return;
+        }
+    }
+
+    /* Normale Sender → Video anzeigen, iFrame verstecken */
+    iframe.style.display = "none";
+
+    playChannel(i);
+}
 
 /* --- Kanal abspielen --- */
 function playChannel(i) {
@@ -217,27 +243,6 @@ function playChannel(i) {
         video.play();
     }
 }
-
-/* --- Auto-Reconnect-System --- */
-function autoReconnect() {
-    const iframe = document.getElementById("iframe");
-
-    if (iframe.style.display === "block") {
-        try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            const text = iframeDoc.body ? iframeDoc.body.innerText.toLowerCase() : "";
-
-            if (text.includes("forbidden") || text.includes("permission")) {
-                console.log("Auto-Reconnect: Web-Sender neu laden...");
-                iframe.src = iframe.src;
-            }
-        } catch (e) {}
-    }
-
-    setTimeout(autoReconnect, 180000);
-}
-
-window.addEventListener("load", autoReconnect);
 
 loadPlaylist();
 </script>
