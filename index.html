@@ -163,13 +163,13 @@ function renderList() {
     }
 }
 
-/* --- Kanal-Handler (Variante B + MEGA HD Fix) --- */
+/* --- Kanal-Handler (Variante B + MEGA HD Fix + Mega News Fix) --- */
 function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
 
     /* --- MEGA HD → Webseite --- */
-    if (name.includes("mega hd")) {
+    if (name === "mega hd") {
         stopVideo();
         iframe.style.display = "block";
         iframe.src = webOnlyChannels["mega hd"];
@@ -177,7 +177,7 @@ function handleChannel(ch, i) {
     }
 
     /* --- Mega News → HLS Stream --- */
-    if (name.includes("mega news")) {
+    if (name === "mega news") {
         iframe.style.display = "none";
         playChannel(i);
         return;
@@ -185,7 +185,7 @@ function handleChannel(ch, i) {
 
     /* --- Andere WebOnly-Sender --- */
     for (const key in webOnlyChannels) {
-        if (key !== "mega hd" && name.includes(key)) {
+        if (name === key) {
             stopVideo();
             iframe.style.display = "block";
             iframe.src = webOnlyChannels[key];
