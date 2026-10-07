@@ -66,6 +66,22 @@ body {
 .channel:focus {
     background: #444;
 }
+
+/* --- Fullscreen Button --- */
+#fsBtn {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    z-index: 9999;
+    padding: 10px 15px;
+    font-size: 18px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: 1px solid #666;
+    border-radius: 6px;
+    cursor: pointer;
+    display: none; /* wird dynamisch angezeigt */
+}
 </style>
 </head>
 
@@ -76,6 +92,7 @@ body {
 <div id="playerArea">
     <video id="video" controls autoplay></video>
     <iframe id="iframe"></iframe>
+    <button id="fsBtn">Fullscreen</button>
 </div>
 
 <script>
@@ -162,6 +179,7 @@ function renderList() {
         list.children[0].focus();
     }
 }
+
 /* --- Kanal-Handler (Variante B + MEGA HD Fix + Mega News Fix) --- */
 function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
@@ -172,6 +190,7 @@ function handleChannel(ch, i) {
         stopVideo();
         iframe.style.display = "block";
         iframe.src = webOnlyChannels["mega hd"];
+        updateFullscreenButton();
         return;
     }
 
@@ -179,6 +198,7 @@ function handleChannel(ch, i) {
     if (name === "mega news") {
         iframe.style.display = "none";
         playChannel(i);
+        updateFullscreenButton();
         return;
     }
 
@@ -188,6 +208,7 @@ function handleChannel(ch, i) {
             stopVideo();
             iframe.style.display = "block";
             iframe.src = webOnlyChannels[key];
+            updateFullscreenButton();
             return;
         }
     }
@@ -195,33 +216,7 @@ function handleChannel(ch, i) {
     /* --- Normale Sender --- */
     iframe.style.display = "none";
     playChannel(i);
-}
-/* --- Kanal-Handler (Variante B) --- */
-function handleChannel(ch, i) {
-    const name = ch.name.toLowerCase();
-    const iframe = document.getElementById("iframe");
-
-    for (const key in webOnlyChannels) {
-        if (name.includes(key)) {
-
-            stopVideo();
-
-            /* iFrame NICHT löschen – nur sichtbar machen */
-            iframe.style.display = "block";
-
-            /* Nur ändern, wenn ein anderer Web-Sender gewählt wurde */
-            if (iframe.src !== webOnlyChannels[key]) {
-                iframe.src = webOnlyChannels[key];
-            }
-
-            return;
-        }
-    }
-
-    /* Normale Sender → Video anzeigen, iFrame verstecken */
-    iframe.style.display = "none";
-
-    playChannel(i);
+    updateFullscreenButton();
 }
 
 /* --- Kanal abspielen --- */
@@ -241,6 +236,31 @@ function playChannel(i) {
     } else {
         video.src = url;
         video.play();
+    }
+}
+
+/* --- Fullscreen für iFrame per Maus --- */
+function enterFullscreen() {
+    const iframe = document.getElementById("iframe");
+    if (iframe.style.display === "block") {
+        if (iframe.requestFullscreen) iframe.requestFullscreen();
+        else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+        else if (iframe.msRequestFullscreen) iframe.msRequestFullscreen();
+    }
+}
+
+/* Button-Klick */
+document.getElementById("fsBtn").onclick = enterFullscreen;
+
+/* Button anzeigen/verstecken */
+function updateFullscreenButton() {
+    const iframe = document.getElementById("iframe");
+    const fsBtn = document.getElementById("fsBtn");
+
+    if (iframe.style.display === "block") {
+        fsBtn.style.display = "block";
+    } else {
+        fsBtn.style.display = "none";
     }
 }
 
