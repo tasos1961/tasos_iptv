@@ -84,10 +84,10 @@ const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a
 let channels = [];
 let hls = null;
 
-/* --- Web-Only Sender (lowercase keys!) --- */
+/* --- Web-Only Sender (nur MEGA HD, NICHT Mega News!) --- */
 const webOnlyChannels = {
-    "ant1": "https://www.antenna.gr/live",
     "mega hd": "https://www.megatv.com/live",
+    "ant1": "https://www.antenna.gr/live",
     "makedonia tv": "https://www.antenna.gr/live",
     "pontos": "https://www.youtube.com/@PontosTV/live",
     "mad": "https://www.youtube.com/c/madtvgreece/live",
@@ -163,31 +163,38 @@ function renderList() {
     }
 }
 
-/* --- Kanal-Handler (Variante B) --- */
+/* --- Kanal-Handler (Variante B + MEGA HD Fix) --- */
 function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
 
+    /* --- MEGA HD → Webseite --- */
+    if (name.includes("mega hd")) {
+        stopVideo();
+        iframe.style.display = "block";
+        iframe.src = webOnlyChannels["mega hd"];
+        return;
+    }
+
+    /* --- Mega News → HLS Stream --- */
+    if (name.includes("mega news")) {
+        iframe.style.display = "none";
+        playChannel(i);
+        return;
+    }
+
+    /* --- Andere WebOnly-Sender --- */
     for (const key in webOnlyChannels) {
-        if (name.includes(key)) {
-
+        if (key !== "mega hd" && name.includes(key)) {
             stopVideo();
-
-            /* iFrame NICHT löschen – nur sichtbar machen */
             iframe.style.display = "block";
-
-            /* Nur ändern, wenn ein anderer Web-Sender gewählt wurde */
-            if (iframe.src !== webOnlyChannels[key]) {
-                iframe.src = webOnlyChannels[key];
-            }
-
+            iframe.src = webOnlyChannels[key];
             return;
         }
     }
 
-    /* Normale Sender → Video anzeigen, iFrame verstecken */
+    /* --- Normale Sender --- */
     iframe.style.display = "none";
-
     playChannel(i);
 }
 
@@ -210,6 +217,27 @@ function playChannel(i) {
         video.play();
     }
 }
+
+/* --- Auto-Reconnect-System --- */
+function autoReconnect() {
+    const iframe = document.getElementById("iframe");
+
+    if (iframe.style.display === "block") {
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const text = iframeDoc.body ? iframeDoc.body.innerText.toLowerCase() : "";
+
+            if (text.includes("forbidden") || text.includes("permission")) {
+                console.log("Auto-Reconnect: Web-Sender neu laden...");
+                iframe.src = iframe.src;
+            }
+        } catch (e) {}
+    }
+
+    setTimeout(autoReconnect, 180000);
+}
+
+window.addEventListener("load", autoReconnect);
 
 loadPlaylist();
 </script>
