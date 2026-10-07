@@ -31,14 +31,28 @@ body {
     top: 0;
 }
 
-/* --- VIDEO RECHTS --- */
-#video {
-    position: absolute;
+/* --- VIDEO / IFRAME RECHTS --- */
+#playerArea {
+    position: fixed;
     right: 0;
     top: 0;
     width: 65%;
     height: 100vh;
     background: #000;
+    overflow: hidden;
+}
+
+#video, #iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#iframe {
+    border: none;
+    display: none; /* nur verstecken, NICHT löschen */
 }
 
 .channel {
@@ -58,7 +72,11 @@ body {
 <body>
 
 <div id="list"></div>
-<video id="video" controls autoplay></video>
+
+<div id="playerArea">
+    <video id="video" controls autoplay></video>
+    <iframe id="iframe"></iframe>
+</div>
 
 <script>
 const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
@@ -69,17 +87,21 @@ let hls = null;
 /* --- Web-Only Sender (lowercase keys!) --- */
 const webOnlyChannels = {
     "ant1": "https://www.antenna.gr/live",
-	"mega hd": "https://www.megatv.com/live",
+    "mega": "https://www.megatv.com/live",
+    "mega hd": "https://www.megatv.com/live",
+    "makedonia tv": "https://www.antenna.gr/live",
+    "pontos": "https://www.youtube.com/@PontosTV/live",
     "mad": "https://www.youtube.com/c/madtvgreece/live",
-	"makedonia tv": "https://www.antenna.gr/live",
-	"pontos": "https://www.youtube.com/@PontosTV/live",
     "euronews": "https://www.youtube.com/euronewsGreek/live"
 };
+
 /* --- Video stoppen --- */
 function stopVideo() {
     const video = document.getElementById("video");
+
     video.pause();
     video.src = "";
+
     if (hls) {
         hls.destroy();
         hls = null;
@@ -128,36 +150,10 @@ function renderList() {
         div.className = "channel";
         div.tabIndex = 0;
 
-        /* --- KLICK --- */
-        div.onclick = () => {
-            const name = ch.name.toLowerCase();
+        div.onclick = () => handleChannel(ch, i);
 
-            for (const key in webOnlyChannels) {
-                if (name.includes(key)) {
-                    stopVideo();
-                    window.location.href = webOnlyChannels[key];
-                    return;
-                }
-            }
-
-            playChannel(i);
-        };
-
-        /* --- ENTER-TASTE --- */
         div.onkeydown = (e) => {
-            if (e.key === "Enter") {
-                const name = ch.name.toLowerCase();
-
-                for (const key in webOnlyChannels) {
-                    if (name.includes(key)) {
-                        stopVideo();
-                        window.location.href = webOnlyChannels[key];
-                        return;
-                    }
-                }
-
-                playChannel(i);
-            }
+            if (e.key === "Enter") handleChannel(ch, i);
         };
 
         list.appendChild(div);
@@ -166,6 +162,34 @@ function renderList() {
     if (list.children.length > 0) {
         list.children[0].focus();
     }
+}
+
+/* --- Kanal-Handler (Variante B) --- */
+function handleChannel(ch, i) {
+    const name = ch.name.toLowerCase();
+    const iframe = document.getElementById("iframe");
+
+    for (const key in webOnlyChannels) {
+        if (name.includes(key)) {
+
+            stopVideo();
+
+            /* iFrame NICHT löschen – nur sichtbar machen */
+            iframe.style.display = "block";
+
+            /* Nur ändern, wenn ein anderer Web-Sender gewählt wurde */
+            if (iframe.src !== webOnlyChannels[key]) {
+                iframe.src = webOnlyChannels[key];
+            }
+
+            return;
+        }
+    }
+
+    /* Normale Sender → Video anzeigen, iFrame verstecken */
+    iframe.style.display = "none";
+
+    playChannel(i);
 }
 
 /* --- Kanal abspielen --- */
