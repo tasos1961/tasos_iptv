@@ -269,31 +269,41 @@ function megaPopupBlocker() {
 
 setInterval(megaPopupBlocker, 2000);
 
-/* --- Auto-Klick für ANT1 --- */
-function ant1AutoClick() {
+/* --- ANT1 Geo-Block Erkennung + Auto-Reconnect --- */
+function ant1GeoFix() {
     const iframe = document.getElementById("iframe");
     if (iframe.style.display !== "block") return;
     if (!iframe.src.includes("antenna.gr")) return;
 
     try {
         const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const text = doc.body ? doc.body.innerText.toLowerCase() : "";
 
-        const liveBtn = doc.querySelector('a[href*="live"], button:contains("Live"), .live-button');
-        if (liveBtn) {
-            liveBtn.click();
-            console.log("ANT1 Auto-Klick: LiveTV gedrückt");
+        /* Geo-Block erkannt */
+        if (text.includes("geoblock") ||
+            text.includes("not available") ||
+            text.includes("region") ||
+            text.includes("permission")) {
+
+            console.log("ANT1 Geo-Block erkannt → neu laden");
+            iframe.src = iframe.src;
         }
 
-        const geoBlock = doc.querySelector('.geoblock, .modal, .popup, .alert');
-        if (geoBlock) {
-            geoBlock.style.display = "none";
-            console.log("ANT1 Geo-Block entfernt");
+        /* Fehler erkannt */
+        if (text.includes("error") ||
+            text.includes("forbidden") ||
+            text.includes("denied")) {
+
+            console.log("ANT1 Fehler erkannt → neu laden");
+            iframe.src = iframe.src;
         }
 
     } catch (e) {}
 }
 
-setInterval(ant1AutoClick, 3000);
+/* alle 10 Sekunden prüfen */
+setInterval(ant1GeoFix, 10000);
+
 
 /* --- Session-Keeper --- */
 function sessionKeeper() {
