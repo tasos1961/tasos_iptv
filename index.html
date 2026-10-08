@@ -248,7 +248,6 @@ function megaPopupBlocker() {
     try {
         const doc = iframe.contentDocument || iframe.contentWindow.document;
 
-        /* Buttons suchen */
         const closeBtn = doc.querySelector(
             'button[aria-label="Close"], .close, .popup-close, .mfp-close'
         );
@@ -258,7 +257,6 @@ function megaPopupBlocker() {
             console.log("MEGA Popup geschlossen");
         }
 
-        /* Falls kein Button → Popup verstecken */
         const popup = doc.querySelector('.modal, .popup, .newsletter, .insider');
         if (popup) {
             popup.style.display = "none";
@@ -270,7 +268,46 @@ function megaPopupBlocker() {
 
 setInterval(megaPopupBlocker, 2000);
 
-/* --- Auto-Reconnect für MEGA HD / ANT1 --- */
+/* --- Auto-Klick für ANT1 --- */
+function ant1AutoClick() {
+    const iframe = document.getElementById("iframe");
+    if (iframe.style.display !== "block") return;
+    if (!iframe.src.includes("antenna.gr")) return;
+
+    try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+        const liveBtn = doc.querySelector('a[href*="live"], button:contains("Live"), .live-button');
+        if (liveBtn) {
+            liveBtn.click();
+            console.log("ANT1 Auto-Klick: LiveTV gedrückt");
+        }
+
+        const geoBlock = doc.querySelector('.geoblock, .modal, .popup, .alert');
+        if (geoBlock) {
+            geoBlock.style.display = "none";
+            console.log("ANT1 Geo-Block entfernt");
+        }
+
+    } catch (e) {}
+}
+
+setInterval(ant1AutoClick, 3000);
+
+/* --- Session-Keeper --- */
+function sessionKeeper() {
+    const iframe = document.getElementById("iframe");
+    if (iframe.style.display !== "block") return;
+
+    try {
+        iframe.contentWindow.postMessage("ping", "*");
+        console.log("Session-Keeper Ping gesendet");
+    } catch (e) {}
+}
+
+setInterval(sessionKeeper, 120000);
+
+/* --- Auto-Reconnect --- */
 function autoReconnect() {
     const iframe = document.getElementById("iframe");
     if (iframe.style.display !== "block") return;
@@ -290,7 +327,7 @@ function autoReconnect() {
 
 }
 
-setInterval(autoReconnect, 180000); // alle 3 Minuten
+setInterval(autoReconnect, 180000);
 
 loadPlaylist();
 </script>
