@@ -17,21 +17,17 @@ body {
     overflow: hidden;
 }
 
-/* --- FIXIERTE LISTE LINKS --- */
 #list {
     width: 35%;
     height: 100vh;
     background: #111;
     padding: 10px;
     overflow-y: scroll;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
     position: fixed;
     left: 0;
     top: 0;
 }
 
-/* --- VIDEO / IFRAME RECHTS --- */
 #playerArea {
     position: fixed;
     right: 0;
@@ -39,7 +35,6 @@ body {
     width: 65%;
     height: 100vh;
     background: #000;
-    overflow: hidden;
 }
 
 #video, #iframe {
@@ -59,7 +54,6 @@ body {
     padding: 18px;
     font-size: 22px;
     border-bottom: 1px solid #333;
-    outline: none;
     cursor: pointer;
 }
 
@@ -67,7 +61,6 @@ body {
     background: #444;
 }
 
-/* --- Fullscreen Button --- */
 #fsBtn {
     position: absolute;
     right: 15px;
@@ -101,16 +94,15 @@ const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a
 let channels = [];
 let hls = null;
 
-/* --- Web-Only Sender --- */
+/* --- Web-Sender (iFrame) --- */
 const webOnlyChannels = {
     "mega hd": "https://www.megatv.com/live",
-    "ant1": "https://www.antenna.gr/live",
+    "ant1life": "https://www.antenna.gr/live",
     "makedonia tv": "https://www.antenna.gr/live",
     "pontos": "https://www.youtube.com/@PontosTV/live",
     "mad": "https://www.youtube.com/c/madtvgreece/live",
     "euronews": "https://www.youtube.com/euronewsGreek/live"
 };
-
 
 /* --- Video stoppen --- */
 function stopVideo() {
@@ -171,41 +163,22 @@ function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
 
-    /* --- MEGA HD --- */
-    if (name === "mega hd") {
+    /* --- Web-Sender (iFrame) --- */
+    if (webOnlyChannels[name]) {
         stopVideo();
         iframe.style.display = "block";
-        iframe.src = webOnlyChannels["mega hd"];
+        iframe.src = webOnlyChannels[name];
         updateFullscreenButton();
         return;
     }
 
-    /* --- Mega News (HLS) --- */
-    if (name === "mega news") {
-        iframe.style.display = "none";
-        playChannel(i);
-        updateFullscreenButton();
-        return;
-    }
-
-    /* --- Andere Web-Sender --- */
-    for (const key in webOnlyChannels) {
-        if (name === key) {
-            stopVideo();
-            iframe.style.display = "block";
-            iframe.src = webOnlyChannels[key];
-            updateFullscreenButton();
-            return;
-        }
-    }
-
-    /* --- Normale Sender --- */
+    /* --- HLS-Sender (Video) --- */
     iframe.style.display = "none";
     playChannel(i);
     updateFullscreenButton();
 }
 
-/* --- Kanal abspielen --- */
+/* --- Kanal abspielen (HLS) --- */
 function playChannel(i) {
     const video = document.getElementById("video");
     const url = channels[i].url;
@@ -245,31 +218,49 @@ function updateFullscreenButton() {
 function megaPopupBlocker() {
     const iframe = document.getElementById("iframe");
     if (iframe.style.display !== "block") return;
+    if (!iframe.src.includes("megatv")) return;
 
     try {
         const doc = iframe.contentDocument || iframe.contentWindow.document;
 
-        const closeBtn = doc.querySelector(
-            'button[aria-label="Close"], .close, .popup-close, .mfp-close'
-        );
-
-        if (closeBtn) {
-            closeBtn.click();
-            console.log("MEGA Popup geschlossen");
-        }
+        const closeBtn = doc.querySelector('button[aria-label="Close"], .close, .popup-close, .mfp-close');
+        if (closeBtn) closeBtn.click();
 
         const popup = doc.querySelector('.modal, .popup, .newsletter, .insider');
-        if (popup) {
-            popup.style.display = "none";
-            console.log("MEGA Popup versteckt");
-        }
+        if (popup) popup.style.display = "none";
 
     } catch (e) {}
 }
 
 setInterval(megaPopupBlocker, 2000);
 
-/* --- ANT1 Geo-Block Erkennung + Auto-Reconnect --- */
+/* --- Popup-Blocker für ANT1Life --- */
+function ant1PopupBlocker() {
+    const iframe = document.getElementById("iframe");
+    if (iframe.style.display !== "block") return;
+    if (!iframe.src.includes("antenna.gr")) return;
+
+    try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+        const cookie = doc.querySelector('.cookie, .cookies, #cookie, .cookie-banner');
+        if (cookie) cookie.style.display = "none";
+
+        const geo = doc.querySelector('.geoblock, .modal, .popup, .alert, .region-block');
+        if (geo) geo.style.display = "none";
+
+        const promo = doc.querySelector('.promo, .advert, .ad, .ads, .promo-banner');
+        if (promo) promo.style.display = "none";
+
+        const closeBtn = doc.querySelector('.close, .popup-close, .mfp-close');
+        if (closeBtn) closeBtn.click();
+
+    } catch (e) {}
+}
+
+setInterval(ant1PopupBlocker, 2000);
+
+/* --- ANT1Life Geo-Block Fix --- */
 function ant1GeoFix() {
     const iframe = document.getElementById("iframe");
     if (iframe.style.display !== "block") return;
@@ -279,66 +270,33 @@ function ant1GeoFix() {
         const doc = iframe.contentDocument || iframe.contentWindow.document;
         const text = doc.body ? doc.body.innerText.toLowerCase() : "";
 
-        /* Geo-Block erkannt */
         if (text.includes("geoblock") ||
             text.includes("not available") ||
             text.includes("region") ||
-            text.includes("permission")) {
+            text.includes("permission") ||
+            text.includes("error") ||
+            text.includes("forbidden")) {
 
-            console.log("ANT1 Geo-Block erkannt → neu laden");
-            iframe.src = iframe.src;
-        }
-
-        /* Fehler erkannt */
-        if (text.includes("error") ||
-            text.includes("forbidden") ||
-            text.includes("denied")) {
-
-            console.log("ANT1 Fehler erkannt → neu laden");
             iframe.src = iframe.src;
         }
 
     } catch (e) {}
 }
 
-/* alle 10 Sekunden prüfen */
 setInterval(ant1GeoFix, 10000);
 
-
-/* --- Session-Keeper --- */
+/* --- Session-Keeper für ANT1Life --- */
 function sessionKeeper() {
     const iframe = document.getElementById("iframe");
     if (iframe.style.display !== "block") return;
+    if (!iframe.src.includes("antenna.gr")) return;
 
     try {
         iframe.contentWindow.postMessage("ping", "*");
-        console.log("Session-Keeper Ping gesendet");
     } catch (e) {}
 }
 
 setInterval(sessionKeeper, 120000);
-
-/* --- Auto-Reconnect --- */
-function autoReconnect() {
-    const iframe = document.getElementById("iframe");
-    if (iframe.style.display !== "block") return;
-
-    try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        const text = doc.body ? doc.body.innerText.toLowerCase() : "";
-
-        if (text.includes("forbidden") ||
-            text.includes("permission") ||
-            text.includes("error")) {
-
-            console.log("Auto-Reconnect ausgelöst");
-            iframe.src = iframe.src;
-        }
-    } catch (e) {}
-
-}
-
-setInterval(autoReconnect, 180000);
 
 loadPlaylist();
 </script>
