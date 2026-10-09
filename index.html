@@ -97,7 +97,7 @@ let hls = null;
 /* --- Web-Sender (iFrame) --- */
 const webOnlyChannels = {
     "mega hd": "https://www.megatv.com/live",
-    "ant1life": "https://api.allorigins.win/raw?url=https://www.antenna.gr/live",
+    "ant1life": "https://tasos1961.github.io/tasos_iptv/proxy.html?url=https://www.antenna.gr/live/embed",
     "makedonia tv": "https://www.antenna.gr/live",
     "pontos": "https://www.youtube.com/@PontosTV/live",
     "mad": "https://www.youtube.com/c/madtvgreece/live",
@@ -239,7 +239,6 @@ function megaPopupBlocker() {
 
     try {
         const doc = iframe.contentDocument || iframe.contentWindow.document;
-
         const closeBtn = doc.querySelector('button[aria-label="Close"], .close, .popup-close, .mfp-close');
         if (closeBtn) closeBtn.click();
 
