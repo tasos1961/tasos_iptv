@@ -298,6 +298,26 @@ function sessionKeeper() {
 
 setInterval(sessionKeeper, 120000);
 
+/* --- Auto-Reconnect für Web-Sender --- */
+function autoReconnect() {
+    const iframe = document.getElementById("iframe");
+    if (iframe.style.display !== "block") return;
+
+    try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const text = doc.body ? doc.body.innerText.toLowerCase() : "";
+
+        if (text.includes("forbidden") ||
+            text.includes("permission") ||
+            text.includes("error")) {
+
+            iframe.src = iframe.src;
+        }
+    } catch (e) {}
+}
+
+setInterval(autoReconnect, 180000);
+
 loadPlaylist();
 </script>
 
