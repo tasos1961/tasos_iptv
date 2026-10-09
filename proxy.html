@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tasos Proxy</title>
+</head>
+<body>
+<script>
+(async () => {
+  const url = new URL(window.location.href).searchParams.get("url");
+  if (!url) {
+    document.body.innerHTML = "<h3>Proxy aktiv – bitte ?url= hinzufügen</h3>";
+    return;
+  }
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    document.write(text);
+  } catch (e) {
+    document.body.innerHTML = "<h3>Fehler beim Laden: " + e + "</h3>";
+  }
+})();
+</script>
+</body>
+</html>
