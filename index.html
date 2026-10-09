@@ -97,11 +97,16 @@ let hls = null;
 /* --- Web-Sender (iFrame) --- */
 const webOnlyChannels = {
     "mega hd": "https://www.megatv.com/live",
-    "ant1life": "https://www.antenna.gr/live",
     "makedonia tv": "https://www.antenna.gr/live",
     "pontos": "https://www.youtube.com/@PontosTV/live",
     "mad": "https://www.youtube.com/c/madtvgreece/live",
     "euronews": "https://www.youtube.com/euronewsGreek/live"
+};
+
+/* --- Player-Sender (HLS) --- */
+const playerChannels = {
+    "ant1life": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
+    "ant1free": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8"
 };
 
 /* --- Video stoppen --- */
@@ -163,6 +168,14 @@ function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
 
+    /* --- Player-Sender (HLS) --- */
+    if (playerChannels[name]) {
+        iframe.style.display = "none";
+        playDirect(playerChannels[name]);
+        updateFullscreenButton();
+        return;
+    }
+
     /* --- Web-Sender (iFrame) --- */
     if (webOnlyChannels[name]) {
         stopVideo();
@@ -172,16 +185,15 @@ function handleChannel(ch, i) {
         return;
     }
 
-    /* --- HLS-Sender (Video) --- */
+    /* --- Normale HLS-Sender --- */
     iframe.style.display = "none";
     playChannel(i);
     updateFullscreenButton();
 }
 
-/* --- Kanal abspielen (HLS) --- */
-function playChannel(i) {
+/* --- Direkt HLS abspielen --- */
+function playDirect(url) {
     const video = document.getElementById("video");
-    const url = channels[i].url;
 
     if (hls) { hls.destroy(); hls = null; }
 
@@ -193,6 +205,11 @@ function playChannel(i) {
         video.src = url;
         video.play();
     }
+}
+
+/* --- Kanal abspielen (HLS aus Playlist) --- */
+function playChannel(i) {
+    playDirect(channels[i].url);
 }
 
 /* --- Fullscreen per Maus --- */
@@ -233,70 +250,6 @@ function megaPopupBlocker() {
 }
 
 setInterval(megaPopupBlocker, 2000);
-
-/* --- Popup-Blocker für ANT1Life --- */
-function ant1PopupBlocker() {
-    const iframe = document.getElementById("iframe");
-    if (iframe.style.display !== "block") return;
-    if (!iframe.src.includes("antenna.gr")) return;
-
-    try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-
-        const cookie = doc.querySelector('.cookie, .cookies, #cookie, .cookie-banner');
-        if (cookie) cookie.style.display = "none";
-
-        const geo = doc.querySelector('.geoblock, .modal, .popup, .alert, .region-block');
-        if (geo) geo.style.display = "none";
-
-        const promo = doc.querySelector('.promo, .advert, .ad, .ads, .promo-banner');
-        if (promo) promo.style.display = "none";
-
-        const closeBtn = doc.querySelector('.close, .popup-close, .mfp-close');
-        if (closeBtn) closeBtn.click();
-
-    } catch (e) {}
-}
-
-setInterval(ant1PopupBlocker, 2000);
-
-/* --- ANT1Life Geo-Block Fix --- */
-function ant1GeoFix() {
-    const iframe = document.getElementById("iframe");
-    if (iframe.style.display !== "block") return;
-    if (!iframe.src.includes("antenna.gr")) return;
-
-    try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        const text = doc.body ? doc.body.innerText.toLowerCase() : "";
-
-        if (text.includes("geoblock") ||
-            text.includes("not available") ||
-            text.includes("region") ||
-            text.includes("permission") ||
-            text.includes("error") ||
-            text.includes("forbidden")) {
-
-            iframe.src = iframe.src;
-        }
-
-    } catch (e) {}
-}
-
-setInterval(ant1GeoFix, 10000);
-
-/* --- Session-Keeper für ANT1Life --- */
-function sessionKeeper() {
-    const iframe = document.getElementById("iframe");
-    if (iframe.style.display !== "block") return;
-    if (!iframe.src.includes("antenna.gr")) return;
-
-    try {
-        iframe.contentWindow.postMessage("ping", "*");
-    } catch (e) {}
-}
-
-setInterval(sessionKeeper, 120000);
 
 /* --- Auto-Reconnect für Web-Sender --- */
 function autoReconnect() {
