@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Tasos TV</title>
+<title>Tasos IPTV</title>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
@@ -94,7 +94,10 @@ const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a
 let channels = [];
 let hls = null;
 
-/* --- Web-Sender (iFrame) --- */
+/* --- Proxy-URL für Vercel --- */
+const proxyBase = "https://tasos-iptv.vercel.app/api/proxy?url=";
+
+/* --- Web-Sender (über Proxy) --- */
 const webOnlyChannels = {
     "mega hd": "https://www.megatv.com/live",
     "ant1life": "https://www.antenna.gr/live",
@@ -102,11 +105,6 @@ const webOnlyChannels = {
     "pontos": "https://www.youtube.com/@PontosTV/live",
     "mad": "https://www.youtube.com/c/madtvgreece/live",
     "euronews": "https://www.youtube.com/euronewsGreek/live"
-};
-
-/* --- Player-Sender (HLS) --- */
-const playerChannels = {
-    // ant1free entfernt
 };
 
 /* --- Video stoppen --- */
@@ -168,19 +166,11 @@ function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
 
-    /* --- Player-Sender (HLS) --- */
-    if (playerChannels[name]) {
-        iframe.style.display = "none";
-        playDirect(playerChannels[name]);
-        updateFullscreenButton();
-        return;
-    }
-
-    /* --- Web-Sender (iFrame) --- */
+    /* --- Web-Sender über Proxy --- */
     if (webOnlyChannels[name]) {
         stopVideo();
         iframe.style.display = "block";
-        iframe.src = webOnlyChannels[name];
+        iframe.src = proxyBase + encodeURIComponent(webOnlyChannels[name]);
         updateFullscreenButton();
         return;
     }
