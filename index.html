@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <title>Tasos IPTV</title>
-
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -90,7 +89,6 @@ body {
 
 <script>
 const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
-
 let channels = [];
 let hls = null;
 
@@ -99,10 +97,9 @@ const proxyBase = "https://tasos-iptv.vercel.app/api/proxy?url=";
 
 /* --- Web-Sender (über Proxy) --- */
 const webOnlyChannels = {
-    "mega hd": "https://www.megatv.com/live",
     "ant1life": "https://www.antenna.gr/live",
+    "mega hd": "https://www.megatv.com/live",
     "makedonia tv": "https://www.antenna.gr/live",
-    "pontos": "https://www.youtube.com/@PontosTV/live",
     "mad": "https://www.youtube.com/c/madtvgreece/live",
     "euronews": "https://www.youtube.com/euronewsGreek/live"
 };
