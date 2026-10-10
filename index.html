@@ -95,7 +95,6 @@ let hls = null;
 /* --- Proxy-URL für Vercel --- */
 const proxyBase = "https://tasosiptv.vercel.app/api/proxy?url=";
 
-
 /* --- Web-Sender (über Proxy) --- */
 const webOnlyChannels = {
     "ant1life": "https://www.antenna.gr/live",
@@ -173,7 +172,7 @@ function handleChannel(ch, i) {
         return;
     }
 
-    /* --- Normale HLS-Sender --- */
+    /* --- HLS-Sender direkt abspielen --- */
     iframe.style.display = "none";
     playChannel(i);
     updateFullscreenButton();
@@ -218,45 +217,6 @@ function updateFullscreenButton() {
     const fsBtn = document.getElementById("fsBtn");
     fsBtn.style.display = iframe.style.display === "block" ? "block" : "none";
 }
-
-/* --- Popup-Blocker für MEGA HD --- */
-function megaPopupBlocker() {
-    const iframe = document.getElementById("iframe");
-    if (iframe.style.display !== "block") return;
-    if (!iframe.src.includes("megatv")) return;
-
-    try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        const closeBtn = doc.querySelector('button[aria-label="Close"], .close, .popup-close, .mfp-close');
-        if (closeBtn) closeBtn.click();
-
-        const popup = doc.querySelector('.modal, .popup, .newsletter, .insider');
-        if (popup) popup.style.display = "none";
-
-    } catch (e) {}
-}
-
-setInterval(megaPopupBlocker, 2000);
-
-/* --- Auto-Reconnect für Web-Sender --- */
-function autoReconnect() {
-    const iframe = document.getElementById("iframe");
-    if (iframe.style.display !== "block") return;
-
-    try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        const text = doc.body ? doc.body.innerText.toLowerCase() : "";
-
-        if (text.includes("forbidden") ||
-            text.includes("permission") ||
-            text.includes("error")) {
-
-            iframe.src = iframe.src;
-        }
-    } catch (e) {}
-}
-
-setInterval(autoReconnect, 180000);
 
 loadPlaylist();
 </script>
