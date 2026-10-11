@@ -9,7 +9,7 @@ export default async function handler(req, res) {
         const response = await fetch(target, {
             headers: {
                 "User-Agent": "Mozilla/5.0 (SmartTV; VIDAA; Opera)",
-                "Referer": "https://www.antenna.gr/",
+                "Referer": "https://www.antenna.gr/tv",
                 "Accept": "*/*"
             }
         });
