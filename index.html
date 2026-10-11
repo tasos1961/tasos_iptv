@@ -34,9 +34,6 @@ body {
     width: 65%;
     height: 100vh;
     background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 #video, #iframe {
@@ -64,7 +61,8 @@ body {
 }
 
 .channel.active {
-    background: #555;
+    background: #2a5f2a;
+    font-weight: bold;
 }
 
 #fsBtn {
@@ -81,29 +79,6 @@ body {
     cursor: pointer;
     display: none;
 }
-
-#status {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0,0,0,0.8);
-    color: #fff;
-    padding: 10px 15px;
-    border-radius: 6px;
-    font-size: 14px;
-    z-index: 9998;
-    display: none;
-}
-
-#status.error {
-    color: #ff6b6b;
-    display: block;
-}
-
-#status.loading {
-    color: #ffd93d;
-    display: block;
-}
 </style>
 </head>
 
@@ -112,10 +87,9 @@ body {
 <div id="list"></div>
 
 <div id="playerArea">
-    <video id="video" controls autoplay></video>
+    <video id="video" controls autoplay playsinline></video>
     <iframe id="iframe"></iframe>
     <button id="fsBtn">Fullscreen</button>
-    <div id="status"></div>
 </div>
 
 <script>
@@ -124,7 +98,7 @@ let channels = [];
 let hls = null;
 let currentChannelIndex = -1;
 
-// Direkt-Stream für ANT1 / ANT1Free (mit Proxy-Fallback)
+// Direkt-Stream URLs - wie in IPTV Pro App
 const directStreamOverrides = {
     "ant1": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
     "ant1 hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
@@ -134,9 +108,8 @@ const directStreamOverrides = {
     "ant1 free hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8"
 };
 
-/* --- Proxy-URLs für CORS-Umgehung --- */
+/* --- Proxy-URL für Vercel --- */
 const proxyBase = "https://tasosiptv.vercel.app/api/proxy?url=";
-const corsProxyBase = "https://cors-anywhere.herokuapp.com/";
 
 /* --- Web-Sender (über Proxy) --- */
 const webOnlyChannels = {
@@ -146,17 +119,6 @@ const webOnlyChannels = {
     "mad": "https://www.youtube.com/c/madtvgreece/live",
     "euronews": "https://www.youtube.com/euronewsGreek/live"
 };
-
-/* --- Status anzeigen --- */
-function showStatus(message, type = "loading") {
-    const status = document.getElementById("status");
-    status.textContent = message;
-    status.className = type;
-}
-
-function hideStatus() {
-    document.getElementById("status").className = "";
-}
 
 /* --- Video stoppen --- */
 function stopVideo() {
@@ -175,12 +137,10 @@ function stopVideo() {
 
     iframe.src = "";
     iframe.style.display = "none";
-    hideStatus();
 }
 
 /* --- Playlist laden --- */
 function loadPlaylist() {
-    showStatus("Playlist wird geladen...", "loading");
     fetch(playlistURL)
         .then(r => {
             if (!r.ok) throw new Error("Playlist fetch failed");
@@ -188,8 +148,7 @@ function loadPlaylist() {
         })
         .then(t => parseM3U(t))
         .catch(err => {
-            console.error("Playlist Fehler:", err);
-            showStatus("Playlist konnte nicht geladen werden. Verwende ANT1-Stream...", "error");
+            console.warn("Playlist Fehler:", err);
             channels = [{ name: "ANT1", url: directStreamOverrides["ant1"] }];
             renderList();
             playChannel(0);
@@ -212,7 +171,6 @@ function parseM3U(data) {
         }
     });
 
-    // ANT1 Direkt-Stream überschreibt den ANT1-Eintrag aus der Playlist
     channels = channels.map(ch => {
         const key = ch.name.toLowerCase();
         if (directStreamOverrides[key]) {
@@ -225,8 +183,6 @@ function parseM3U(data) {
 
     if (channels.length > 0) {
         playChannel(0);
-    } else {
-        showStatus("Keine Kanäle in der Playlist gefunden.", "error");
     }
 }
 
@@ -255,7 +211,6 @@ function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
 
-    /* --- Web-Sender über Proxy --- */
     if (webOnlyChannels[name]) {
         stopVideo();
         iframe.style.display = "block";
@@ -264,7 +219,6 @@ function handleChannel(ch, i) {
         return;
     }
 
-    /* --- HLS-Sender direkt abspielen --- */
     iframe.style.display = "none";
     iframe.src = "";
     playChannel(i);
@@ -281,100 +235,70 @@ function updateActiveChannel(index) {
     currentChannelIndex = index;
 }
 
-/* --- Direkt HLS abspielen --- */
+/* --- Direkt HLS abspielen (wie IPTV Pro) --- */
 function playDirect(url) {
     const video = document.getElementById("video");
-    showStatus("Stream wird geladen...", "loading");
 
     if (hls) {
         hls.destroy();
         hls = null;
     }
 
+    console.log("Playing:", url);
+
     if (Hls.isSupported()) {
         hls = new Hls({
-            xhrSetup: function(xhr) {
-                xhr.withCredentials = false;
-                xhr.setRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-            },
-            enableWorker: true,
             debug: false,
-            progressive: true,
-            lowLatencyMode: true
+            enableWorker: true,
+            lowLatencyMode: false,
+            maxBufferLength: 30,
+            maxMaxBufferLength: 60,
+            maxBufferSize: 60 * 1000 * 1000,
+            maxBufferHoleDuration: 30,
+            fragLoadingTimeOut: 20000,
+            fragLoadingMaxRetry: 6,
+            levelLoadingTimeOut: 10000,
+            levelLoadingMaxRetry: 4
         });
 
         hls.loadSource(url);
         hls.attachMedia(video);
 
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            hideStatus();
-            video.play().catch(() => {
-                showStatus("Autoplay blockiert - klicke Play", "loading");
-            });
+            console.log("Stream geladen");
+            video.play().catch(err => console.log("Autoplay blockiert:", err));
         });
 
         hls.on(Hls.Events.ERROR, function(event, data) {
-            console.error("HLS error:", data);
             if (data.fatal) {
-                if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                    showStatus("Netzwerkfehler - versuche mit Proxy...", "error");
-                    retryWithProxy(url);
-                } else {
-                    showStatus("HLS Fehler: " + data.reason, "error");
+                console.error("Fatal HLS error:", data.type, data.reason);
+                switch (data.type) {
+                    case Hls.ErrorTypes.NETWORK_ERROR:
+                        console.error("Netzwerkfehler - versuche Neu...");
+                        setTimeout(() => hls.startLoad(), 3000);
+                        break;
+                    case Hls.ErrorTypes.MEDIA_ERROR:
+                        console.error("Media-Fehler");
+                        hls.recoverMediaError();
+                        break;
+                    default:
+                        console.error("Unbekannter Fehler");
+                        break;
                 }
             }
         });
+
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', () => {
-            hideStatus();
-            video.play().catch(() => {
-                showStatus("Autoplay blockiert", "loading");
-            });
-        }, { once: true });
-        video.addEventListener('error', () => {
-            showStatus("Video konnte nicht geladen werden", "error");
+            video.play().catch(err => console.log("Autoplay blockiert:", err));
         }, { once: true });
     } else {
-        showStatus("HLS wird nicht unterstützt", "error");
+        console.error("HLS nicht unterstützt");
     }
 }
 
-/* --- Mit Proxy erneut versuchen --- */
-function retryWithProxy(url) {
-    const video = document.getElementById("video");
-    const proxyUrl = corsProxyBase + url;
-    
-    if (hls) {
-        hls.destroy();
-        hls = null;
-    }
-
-    if (Hls.isSupported()) {
-        hls = new Hls({
-            xhrSetup: function(xhr) {
-                xhr.withCredentials = false;
-            },
-            enableWorker: true,
-            debug: false
-        });
-
-        hls.loadSource(proxyUrl);
-        hls.attachMedia(video);
-
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            hideStatus();
-            video.play().catch(() => console.log("Autoplay blockiert."));
-        });
-
-        hls.on(Hls.Events.ERROR, function(event, data) {
-            console.error("Proxy HLS error:", data);
-            showStatus("Stream nicht verfügbar", "error");
-        });
-    }
-}
-
-/* --- Kanal abspielen (HLS aus Playlist) --- */
+/* --- Kanal abspielen --- */
 function playChannel(i) {
     if (!channels[i] || !channels[i].url) return;
     playDirect(channels[i].url);
