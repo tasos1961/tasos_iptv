@@ -92,6 +92,12 @@ const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a
 let channels = [];
 let hls = null;
 
+// Direkt-Stream für ANT1
+const directStreamOverrides = {
+    "ant1": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
+    "ant1 hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8"
+};
+
 /* --- Proxy-URL für Vercel --- */
 const proxyBase = "https://tasosiptv.vercel.app/api/proxy?url=";
 
@@ -107,22 +113,43 @@ const webOnlyChannels = {
 /* --- Video stoppen --- */
 function stopVideo() {
     const video = document.getElementById("video");
+    const iframe = document.getElementById("iframe");
+
     video.pause();
     video.src = "";
-    if (hls) { hls.destroy(); hls = null; }
+    video.removeAttribute("src");
+    video.load();
+
+    if (hls) {
+        hls.destroy();
+        hls = null;
+    }
+
+    iframe.src = "";
+    iframe.style.display = "none";
 }
 
 /* --- Playlist laden --- */
 function loadPlaylist() {
     fetch(playlistURL)
-        .then(r => r.text())
-        .then(t => parseM3U(t));
+        .then(r => {
+            if (!r.ok) throw new Error("Playlist fetch failed");
+            return r.text();
+        })
+        .then(t => parseM3U(t))
+        .catch(() => {
+            console.warn("Playlist konnte nicht geladen werden. Fallback auf ANT1-Stream.");
+            channels = [{ name: "ANT1", url: directStreamOverrides["ant1"] }];
+            renderList();
+            playChannel(0);
+        });
 }
 
 /* --- M3U Parser --- */
 function parseM3U(data) {
     const lines = data.split(/\r?\n/);
     let name = "";
+    channels = [];
 
     lines.forEach(line => {
         line = line.trim();
@@ -134,8 +161,22 @@ function parseM3U(data) {
         }
     });
 
+    // ANT1 Direkt-Stream überschreibt den ANT1-Eintrag aus der Playlist
+    channels = channels.map(ch => {
+        const key = ch.name.toLowerCase();
+        if (directStreamOverrides[key]) {
+            return { ...ch, url: directStreamOverrides[key] };
+        }
+        return ch;
+    });
+
     renderList();
-    if (channels.length > 0) playChannel(0);
+
+    if (channels.length > 0) {
+        playChannel(0);
+    } else {
+        console.warn("Keine Kanäle in der Playlist gefunden.");
+    }
 }
 
 /* --- Liste rendern --- */
@@ -174,6 +215,7 @@ function handleChannel(ch, i) {
 
     /* --- HLS-Sender direkt abspielen --- */
     iframe.style.display = "none";
+    iframe.src = "";
     playChannel(i);
     updateFullscreenButton();
 }
@@ -182,7 +224,10 @@ function handleChannel(ch, i) {
 function playDirect(url) {
     const video = document.getElementById("video");
 
-    if (hls) { hls.destroy(); hls = null; }
+    if (hls) {
+        hls.destroy();
+        hls = null;
+    }
 
     if (Hls.isSupported()) {
         hls = new Hls({
@@ -194,15 +239,19 @@ function playDirect(url) {
         });
         hls.loadSource(url);
         hls.attachMedia(video);
+
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            video.play();
+            video.play().catch(() => console.log("Autoplay blockiert."));
         });
+
         hls.on(Hls.Events.ERROR, function(event, data) {
             console.error("HLS error:", data);
         });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
-        video.addEventListener('loadedmetadata', () => video.play());
+        video.addEventListener('loadedmetadata', () => {
+            video.play().catch(() => console.log("Autoplay blockiert."));
+        }, { once: true });
     } else {
         console.error("HLS not supported in this browser");
     }
@@ -210,6 +259,7 @@ function playDirect(url) {
 
 /* --- Kanal abspielen (HLS aus Playlist) --- */
 function playChannel(i) {
+    if (!channels[i] || !channels[i].url) return;
     playDirect(channels[i].url);
 }
 
