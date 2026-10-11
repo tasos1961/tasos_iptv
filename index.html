@@ -131,7 +131,6 @@ const directStreamOverrides = {
 };
 
 const proxyBase = "https://tasosiptv.vercel.app/api/proxy?url=";
-
 const webOnlyChannels = {
     "ant1life": "https://www.antenna.gr/live",
     "mega hd": "https://www.megatv.com/live",
@@ -232,9 +231,48 @@ function renderList() {
     if (list.children.length > 0) list.children[0].focus();
 }
 
-function handleChannel(ch, i) {
+async function fetchAnt1Life() {
+    try {
+        const response = await fetch('/api/ant1life');
+        if (!response.ok) {
+            throw new Error('ANT1Life API request failed');
+        }
+        const data = await response.json();
+        if (!data || !data.url) {
+            throw new Error('Keine ANT1Live-URL gefunden');
+        }
+        return data.url;
+    } catch (error) {
+        console.error('ANT1Life resolve error:', error);
+        throw error;
+    }
+}
+
+async function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
+
+    if (name === 'ant1life') {
+        try {
+            setStatus('ANT1Life wird aufgelöst...', '');
+            const liveUrl = await fetchAnt1Life();
+            stopVideo();
+            iframe.style.display = 'none';
+            iframe.src = '';
+            playDirect(liveUrl, 'ANT1Life');
+            updateFullscreenButton();
+            updateActiveChannel(i);
+            return;
+        } catch (error) {
+            setStatus('ANT1Life konnte nicht aufgelöst werden. Fallback auf Antenna-Seite.', 'error');
+            stopVideo();
+            iframe.style.display = 'block';
+            iframe.src = proxyBase + encodeURIComponent(webOnlyChannels[name]);
+            updateFullscreenButton();
+            updateActiveChannel(i);
+            return;
+        }
+    }
 
     if (webOnlyChannels[name]) {
         stopVideo();
