@@ -34,6 +34,9 @@ body {
     width: 65%;
     height: 100vh;
     background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #video, #iframe {
@@ -60,6 +63,10 @@ body {
     background: #444;
 }
 
+.channel.active {
+    background: #555;
+}
+
 #fsBtn {
     position: absolute;
     right: 15px;
@@ -74,6 +81,29 @@ body {
     cursor: pointer;
     display: none;
 }
+
+#status {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-size: 14px;
+    z-index: 9998;
+    display: none;
+}
+
+#status.error {
+    color: #ff6b6b;
+    display: block;
+}
+
+#status.loading {
+    color: #ffd93d;
+    display: block;
+}
 </style>
 </head>
 
@@ -85,14 +115,16 @@ body {
     <video id="video" controls autoplay></video>
     <iframe id="iframe"></iframe>
     <button id="fsBtn">Fullscreen</button>
+    <div id="status"></div>
 </div>
 
 <script>
 const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
 let channels = [];
 let hls = null;
+let currentChannelIndex = -1;
 
-// Direkt-Stream für ANT1 / ANT1Free
+// Direkt-Stream für ANT1 / ANT1Free (mit Proxy-Fallback)
 const directStreamOverrides = {
     "ant1": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
     "ant1 hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
@@ -102,8 +134,9 @@ const directStreamOverrides = {
     "ant1 free hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8"
 };
 
-/* --- Proxy-URL für Vercel --- */
+/* --- Proxy-URLs für CORS-Umgehung --- */
 const proxyBase = "https://tasosiptv.vercel.app/api/proxy?url=";
+const corsProxyBase = "https://cors-anywhere.herokuapp.com/";
 
 /* --- Web-Sender (über Proxy) --- */
 const webOnlyChannels = {
@@ -113,6 +146,17 @@ const webOnlyChannels = {
     "mad": "https://www.youtube.com/c/madtvgreece/live",
     "euronews": "https://www.youtube.com/euronewsGreek/live"
 };
+
+/* --- Status anzeigen --- */
+function showStatus(message, type = "loading") {
+    const status = document.getElementById("status");
+    status.textContent = message;
+    status.className = type;
+}
+
+function hideStatus() {
+    document.getElementById("status").className = "";
+}
 
 /* --- Video stoppen --- */
 function stopVideo() {
@@ -131,18 +175,21 @@ function stopVideo() {
 
     iframe.src = "";
     iframe.style.display = "none";
+    hideStatus();
 }
 
 /* --- Playlist laden --- */
 function loadPlaylist() {
+    showStatus("Playlist wird geladen...", "loading");
     fetch(playlistURL)
         .then(r => {
             if (!r.ok) throw new Error("Playlist fetch failed");
             return r.text();
         })
         .then(t => parseM3U(t))
-        .catch(() => {
-            console.warn("Playlist konnte nicht geladen werden. Fallback auf ANT1-Stream.");
+        .catch(err => {
+            console.error("Playlist Fehler:", err);
+            showStatus("Playlist konnte nicht geladen werden. Verwende ANT1-Stream...", "error");
             channels = [{ name: "ANT1", url: directStreamOverrides["ant1"] }];
             renderList();
             playChannel(0);
@@ -179,7 +226,7 @@ function parseM3U(data) {
     if (channels.length > 0) {
         playChannel(0);
     } else {
-        console.warn("Keine Kanäle in der Playlist gefunden.");
+        showStatus("Keine Kanäle in der Playlist gefunden.", "error");
     }
 }
 
@@ -222,11 +269,22 @@ function handleChannel(ch, i) {
     iframe.src = "";
     playChannel(i);
     updateFullscreenButton();
+    updateActiveChannel(i);
+}
+
+/* --- Aktiven Kanal markieren --- */
+function updateActiveChannel(index) {
+    document.querySelectorAll(".channel").forEach((ch, i) => {
+        if (i === index) ch.classList.add("active");
+        else ch.classList.remove("active");
+    });
+    currentChannelIndex = index;
 }
 
 /* --- Direkt HLS abspielen --- */
 function playDirect(url) {
     const video = document.getElementById("video");
+    showStatus("Stream wird geladen...", "loading");
 
     if (hls) {
         hls.destroy();
@@ -235,29 +293,84 @@ function playDirect(url) {
 
     if (Hls.isSupported()) {
         hls = new Hls({
-            xhrSetup: function(xhr, url) {
+            xhrSetup: function(xhr) {
+                xhr.withCredentials = false;
+                xhr.setRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+            },
+            enableWorker: true,
+            debug: false,
+            progressive: true,
+            lowLatencyMode: true
+        });
+
+        hls.loadSource(url);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            hideStatus();
+            video.play().catch(() => {
+                showStatus("Autoplay blockiert - klicke Play", "loading");
+            });
+        });
+
+        hls.on(Hls.Events.ERROR, function(event, data) {
+            console.error("HLS error:", data);
+            if (data.fatal) {
+                if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                    showStatus("Netzwerkfehler - versuche mit Proxy...", "error");
+                    retryWithProxy(url);
+                } else {
+                    showStatus("HLS Fehler: " + data.reason, "error");
+                }
+            }
+        });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+            hideStatus();
+            video.play().catch(() => {
+                showStatus("Autoplay blockiert", "loading");
+            });
+        }, { once: true });
+        video.addEventListener('error', () => {
+            showStatus("Video konnte nicht geladen werden", "error");
+        }, { once: true });
+    } else {
+        showStatus("HLS wird nicht unterstützt", "error");
+    }
+}
+
+/* --- Mit Proxy erneut versuchen --- */
+function retryWithProxy(url) {
+    const video = document.getElementById("video");
+    const proxyUrl = corsProxyBase + url;
+    
+    if (hls) {
+        hls.destroy();
+        hls = null;
+    }
+
+    if (Hls.isSupported()) {
+        hls = new Hls({
+            xhrSetup: function(xhr) {
                 xhr.withCredentials = false;
             },
             enableWorker: true,
             debug: false
         });
-        hls.loadSource(url);
+
+        hls.loadSource(proxyUrl);
         hls.attachMedia(video);
 
         hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            hideStatus();
             video.play().catch(() => console.log("Autoplay blockiert."));
         });
 
         hls.on(Hls.Events.ERROR, function(event, data) {
-            console.error("HLS error:", data);
+            console.error("Proxy HLS error:", data);
+            showStatus("Stream nicht verfügbar", "error");
         });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-        video.addEventListener('loadedmetadata', () => {
-            video.play().catch(() => console.log("Autoplay blockiert."));
-        }, { once: true });
-    } else {
-        console.error("HLS not supported in this browser");
     }
 }
 
