@@ -14,14 +14,31 @@ export default async function handler(req, res) {
             }
         });
 
-        const body = await response.text();
+        const contentType = response.headers.get("content-type");
 
+        // Wenn es eine M3U8 Playlist ist → umschreiben
+        if (contentType && contentType.includes("application/vnd.apple.mpegurl")) {
+            let playlist = await response.text();
+
+            // Jede Segment-URL umschreiben → auf unseren Proxy zeigen
+            playlist = playlist.replace(/(https?:\/\/[^\s]+)/g, (match) => {
+                return `${req.headers.host}/api/proxy?url=${encodeURIComponent(match)}`;
+            });
+
+            res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.send(playlist);
+            return;
+        }
+
+        // Normale TS-Segmente oder andere Dateien
+        const buffer = Buffer.from(await response.arrayBuffer());
+        res.setHeader("Content-Type", contentType || "application/octet-stream");
         res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Headers", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        res.send(buffer);
 
-        res.status(200).send(body);
     } catch (err) {
         res.status(500).send("Proxy error: " + err.toString());
     }
 }
+
