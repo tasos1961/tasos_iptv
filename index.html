@@ -79,6 +79,29 @@ body {
     cursor: pointer;
     display: none;
 }
+
+#status {
+    position: absolute;
+    left: 15px;
+    bottom: 15px;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    max-width: 75%;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+#status.error {
+    color: #ff7a7a;
+}
+
+#status.success {
+    color: #7ef29a;
+}
 </style>
 </head>
 
@@ -90,15 +113,14 @@ body {
     <video id="video" controls autoplay playsinline></video>
     <iframe id="iframe"></iframe>
     <button id="fsBtn">Fullscreen</button>
+    <div id="status">Status: initialisiert</div>
 </div>
 
 <script>
 const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
 let channels = [];
 let hls = null;
-let currentChannelIndex = -1;
 
-// Direkt-Stream URLs - wie in IPTV Pro App
 const directStreamOverrides = {
     "ant1": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
     "ant1 hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
@@ -108,10 +130,8 @@ const directStreamOverrides = {
     "ant1 free hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8"
 };
 
-/* --- Proxy-URL für Vercel --- */
 const proxyBase = "https://tasosiptv.vercel.app/api/proxy?url=";
 
-/* --- Web-Sender (über Proxy) --- */
 const webOnlyChannels = {
     "ant1life": "https://www.antenna.gr/live",
     "mega hd": "https://www.megatv.com/live",
@@ -120,7 +140,12 @@ const webOnlyChannels = {
     "euronews": "https://www.youtube.com/euronewsGreek/live"
 };
 
-/* --- Video stoppen --- */
+function setStatus(msg, type = "") {
+    const statusEl = document.getElementById("status");
+    statusEl.textContent = msg;
+    statusEl.className = type;
+}
+
 function stopVideo() {
     const video = document.getElementById("video");
     const iframe = document.getElementById("iframe");
@@ -139,23 +164,23 @@ function stopVideo() {
     iframe.style.display = "none";
 }
 
-/* --- Playlist laden --- */
 function loadPlaylist() {
+    setStatus("Playlist wird geladen...", "");
     fetch(playlistURL)
         .then(r => {
-            if (!r.ok) throw new Error("Playlist fetch failed");
+            if (!r.ok) throw new Error("Playlist HTTP " + r.status);
             return r.text();
         })
-        .then(t => parseM3U(t))
+        .then(parseM3U)
         .catch(err => {
-            console.warn("Playlist Fehler:", err);
+            console.error("Playlist error:", err);
             channels = [{ name: "ANT1", url: directStreamOverrides["ant1"] }];
             renderList();
             playChannel(0);
+            setStatus("Playlist fehlgeschlagen. Fallback auf ANT1 aktiv.", "error");
         });
 }
 
-/* --- M3U Parser --- */
 function parseM3U(data) {
     const lines = data.split(/\r?\n/);
     let name = "";
@@ -180,13 +205,14 @@ function parseM3U(data) {
     });
 
     renderList();
-
     if (channels.length > 0) {
         playChannel(0);
+        setStatus("Playlist geladen. ANT1 wird gestartet...", "");
+    } else {
+        setStatus("Playlist geladen, aber keine Kanäle gefunden.", "error");
     }
 }
 
-/* --- Liste rendern --- */
 function renderList() {
     const list = document.getElementById("list");
     list.innerHTML = "";
@@ -206,7 +232,6 @@ function renderList() {
     if (list.children.length > 0) list.children[0].focus();
 }
 
-/* --- Kanal-Handler --- */
 function handleChannel(ch, i) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
@@ -216,6 +241,8 @@ function handleChannel(ch, i) {
         iframe.style.display = "block";
         iframe.src = proxyBase + encodeURIComponent(webOnlyChannels[name]);
         updateFullscreenButton();
+        setStatus("Web-Kanal über Proxy: " + webOnlyChannels[name], "");
+        updateActiveChannel(i);
         return;
     }
 
@@ -226,17 +253,18 @@ function handleChannel(ch, i) {
     updateActiveChannel(i);
 }
 
-/* --- Aktiven Kanal markieren --- */
 function updateActiveChannel(index) {
     document.querySelectorAll(".channel").forEach((ch, i) => {
-        if (i === index) ch.classList.add("active");
-        else ch.classList.remove("active");
+        ch.classList.toggle("active", i === index);
     });
-    currentChannelIndex = index;
 }
 
-/* --- Direkt HLS abspielen (wie IPTV Pro) --- */
-function playDirect(url) {
+function playChannel(i) {
+    if (!channels[i] || !channels[i].url) return;
+    playDirect(channels[i].url, channels[i].name);
+}
+
+function playDirect(url, channelName = "Kanal") {
     const video = document.getElementById("video");
 
     if (hls) {
@@ -244,17 +272,15 @@ function playDirect(url) {
         hls = null;
     }
 
+    setStatus("Streaming: " + channelName + "\nURL: " + url, "");
     console.log("Playing:", url);
 
     if (Hls.isSupported()) {
         hls = new Hls({
             debug: false,
             enableWorker: true,
-            lowLatencyMode: false,
             maxBufferLength: 30,
-            maxMaxBufferLength: 60,
             maxBufferSize: 60 * 1000 * 1000,
-            maxBufferHoleDuration: 30,
             fragLoadingTimeOut: 20000,
             fragLoadingMaxRetry: 6,
             levelLoadingTimeOut: 10000,
@@ -264,47 +290,40 @@ function playDirect(url) {
         hls.loadSource(url);
         hls.attachMedia(video);
 
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            console.log("Stream geladen");
-            video.play().catch(err => console.log("Autoplay blockiert:", err));
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            console.log("Manifest parsed OK");
+            setStatus("Manifest geladen. Video startet...", "success");
+            video.play().catch(() => setStatus("Autoplay blockiert. Bitte Play drücken.", "error"));
         });
 
-        hls.on(Hls.Events.ERROR, function(event, data) {
-            if (data.fatal) {
-                console.error("Fatal HLS error:", data.type, data.reason);
-                switch (data.type) {
-                    case Hls.ErrorTypes.NETWORK_ERROR:
-                        console.error("Netzwerkfehler - versuche Neu...");
-                        setTimeout(() => hls.startLoad(), 3000);
-                        break;
-                    case Hls.ErrorTypes.MEDIA_ERROR:
-                        console.error("Media-Fehler");
-                        hls.recoverMediaError();
-                        break;
-                    default:
-                        console.error("Unbekannter Fehler");
-                        break;
-                }
+        hls.on(Hls.Events.ERROR, (event, data) => {
+            console.error("HLS error:", data);
+            if (data && data.fatal) {
+                const msg = "Fatal HLS error: " + (data.reason || "unknown") + "\nType: " + (data.type || "unknown");
+                setStatus(msg, "error");
+            } else {
+                setStatus("HLS-Fehler: Nicht fatal, läuft weiter...", "error");
             }
+        });
+
+        hls.on(Hls.Events.FRAG_LOADED, () => {
+            setStatus("Fragmente geladen. Stream läuft.", "success");
         });
 
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', () => {
-            video.play().catch(err => console.log("Autoplay blockiert:", err));
+            setStatus("Safari Fallback: Metadata geladen.", "success");
+            video.play().catch(() => setStatus("Autoplay blockiert. Bitte Play drücken.", "error"));
+        }, { once: true });
+        video.addEventListener('error', () => {
+            setStatus("Video-Fehler im Safari Fallback.", "error");
         }, { once: true });
     } else {
-        console.error("HLS nicht unterstützt");
+        setStatus("HLS wird in diesem Browser nicht unterstützt.", "error");
     }
 }
 
-/* --- Kanal abspielen --- */
-function playChannel(i) {
-    if (!channels[i] || !channels[i].url) return;
-    playDirect(channels[i].url);
-}
-
-/* --- Fullscreen per Maus --- */
 function enterFullscreen() {
     const iframe = document.getElementById("iframe");
     if (iframe.style.display === "block") {
@@ -316,7 +335,6 @@ function enterFullscreen() {
 
 document.getElementById("fsBtn").onclick = enterFullscreen;
 
-/* --- Fullscreen Button anzeigen --- */
 function updateFullscreenButton() {
     const iframe = document.getElementById("iframe");
     const fsBtn = document.getElementById("fsBtn");
