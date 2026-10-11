@@ -185,12 +185,26 @@ function playDirect(url) {
     if (hls) { hls.destroy(); hls = null; }
 
     if (Hls.isSupported()) {
-        hls = new Hls();
+        hls = new Hls({
+            xhrSetup: function(xhr, url) {
+                xhr.withCredentials = false;
+            },
+            enableWorker: true,
+            debug: false
+        });
         hls.loadSource(url);
         hls.attachMedia(video);
-    } else {
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play();
+        });
+        hls.on(Hls.Events.ERROR, function(event, data) {
+            console.error("HLS error:", data);
+        });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
-        video.play();
+        video.addEventListener('loadedmetadata', () => video.play());
+    } else {
+        console.error("HLS not supported in this browser");
     }
 }
 
