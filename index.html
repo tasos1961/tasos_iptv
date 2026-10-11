@@ -241,7 +241,7 @@ function handleChannel(ch, i) {
         iframe.style.display = "block";
         iframe.src = proxyBase + encodeURIComponent(webOnlyChannels[name]);
         updateFullscreenButton();
-        setStatus("Web-Kanal über Proxy: " + webOnlyChannels[name], "");
+        setStatus("Web-Kanal über Proxy: " + name, "");
         updateActiveChannel(i);
         return;
     }
