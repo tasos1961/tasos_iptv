@@ -8,37 +8,43 @@ export default async function handler(req, res) {
     try {
         const response = await fetch(target, {
             headers: {
-                "User-Agent": "Mozilla/5.0 (SmartTV; VIDAA; Opera)",
-                "Referer": "https://www.antenna.gr/tv",
-                "Accept": "*/*"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+                "Referer": "https://www.antenna.gr/",
+                "Accept": "*/*",
+                "Accept-Language": "en-US,en;q=0.9"
             }
         });
 
-        const contentType = response.headers.get("content-type");
+        const contentType = response.headers.get("content-type") || "application/octet-stream";
+        const isM3U8 = contentType.includes("mpegurl") || String(target).includes(".m3u8");
 
-        // Wenn es eine M3U8 Playlist ist → umschreiben
-        if (contentType && contentType.includes("application/vnd.apple.mpegurl")) {
+        if (isM3U8) {
             let playlist = await response.text();
 
-            // Jede Segment-URL umschreiben → auf unseren Proxy zeigen
+            // HLS URLs im Manifest auf den eigenen Proxy umsetzen
             playlist = playlist.replace(/(https?:\/\/[^\s]+)/g, (match) => {
-                return `${req.headers.host}/api/proxy?url=${encodeURIComponent(match)}`;
+                const origin = req.headers.host || "tasosiptv.vercel.app";
+                const base = `https://${origin}`;
+                const proxyUrl = `${base}/api/proxy?url=${encodeURIComponent(match)}`;
+                return proxyUrl;
             });
 
             res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
             res.setHeader("Access-Control-Allow-Origin", "*");
-            res.send(playlist);
+            res.setHeader("Access-Control-Allow-Headers", "*");
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            res.status(200).send(playlist);
             return;
         }
 
-        // Normale TS-Segmente oder andere Dateien
         const buffer = Buffer.from(await response.arrayBuffer());
-        res.setHeader("Content-Type", contentType || "application/octet-stream");
+        res.setHeader("Content-Type", contentType);
         res.setHeader("Access-Control-Allow-Origin", "*");
-        res.send(buffer);
+        res.setHeader("Access-Control-Allow-Headers", "*");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        res.status(200).send(buffer);
 
     } catch (err) {
         res.status(500).send("Proxy error: " + err.toString());
     }
 }
-
