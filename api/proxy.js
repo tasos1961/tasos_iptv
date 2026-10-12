@@ -18,6 +18,18 @@ export default async function handler(req, res) {
         const contentType = response.headers.get("content-type") || "application/octet-stream";
         const isM3U8 = contentType.includes("mpegurl") || String(target).includes(".m3u8");
 
+        // Respektiere Cache-Control Header vom Origin
+        const cacheControl = response.headers.get("cache-control");
+        if (cacheControl) {
+            res.setHeader("Cache-Control", cacheControl);
+        } else if (isM3U8) {
+            // Standard-Cache für M3U8: 60 Sekunden
+            res.setHeader("Cache-Control", "public, max-age=60");
+        } else {
+            // Standard-Cache für andere Inhalte: 1 Stunde
+            res.setHeader("Cache-Control", "public, max-age=3600");
+        }
+
         if (isM3U8) {
             let playlist = await response.text();
 
