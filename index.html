@@ -56,10 +56,6 @@ body {
     cursor: pointer;
 }
 
-.channel:focus {
-    background: #444;
-}
-
 .channel.active {
     background: #2a5f2a;
     font-weight: bold;
@@ -94,14 +90,6 @@ body {
     line-height: 1.5;
     white-space: pre-wrap;
 }
-
-#status.error {
-    color: #ff7a7a;
-}
-
-#status.success {
-    color: #7ef29a;
-}
 </style>
 </head>
 
@@ -117,20 +105,16 @@ body {
 </div>
 
 <script>
-const playlistURL = "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
+const proxy = "http://85.190.112.166:3000/api/proxy?url=";
+
+// Deine GitHub Playlist
+const playlistURL =
+    "https://raw.githubusercontent.com/tasos1961/TasosIPTV/main/BGREEK_TV.m3u";
+
 let channels = [];
 let hls = null;
 
-const directStreamOverrides = {
-    "ant1": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
-    "ant1 hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
-    "ant1free": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
-    "ant1 free": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
-    "ant1free hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8",
-    "ant1 free hd": "https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8"
-};
-
-const proxyBase = "https://tasosiptv.vercel.app/api/proxy?url=";
+// Web-only Seiten (immer über Proxy im iframe)
 const webOnlyChannels = {
     "ant1life": "https://www.antenna.gr/live",
     "mega hd": "https://www.megatv.com/live",
@@ -139,10 +123,8 @@ const webOnlyChannels = {
     "euronews": "https://www.youtube.com/euronewsGreek/live"
 };
 
-function setStatus(msg, type = "") {
-    const statusEl = document.getElementById("status");
-    statusEl.textContent = msg;
-    statusEl.className = type;
+function setStatus(msg) {
+    document.getElementById("status").textContent = msg;
 }
 
 function stopVideo() {
@@ -151,65 +133,48 @@ function stopVideo() {
 
     video.pause();
     video.src = "";
-    video.removeAttribute("src");
-    video.load();
-
-    if (hls) {
-        hls.destroy();
-        hls = null;
-    }
+    if (hls) { hls.destroy(); hls = null; }
 
     iframe.src = "";
     iframe.style.display = "none";
 }
 
 function loadPlaylist() {
-    setStatus("Playlist wird geladen...", "");
+    setStatus("Playlist wird geladen...");
     fetch(playlistURL)
-        .then(r => {
-            if (!r.ok) throw new Error("Playlist HTTP " + r.status);
-            return r.text();
-        })
+        .then(r => r.text())
         .then(parseM3U)
         .catch(err => {
-            console.error("Playlist error:", err);
-            channels = [{ name: "ANT1", url: directStreamOverrides["ant1"] }];
-            renderList();
-            playChannel(0);
-            setStatus("Playlist fehlgeschlagen. Fallback auf ANT1 aktiv.", "error");
+            console.error(err);
+            setStatus("Fehler beim Laden der Playlist.");
         });
 }
 
 function parseM3U(data) {
     const lines = data.split(/\r?\n/);
     let name = "";
+
     channels = [];
 
     lines.forEach(line => {
         line = line.trim();
         if (line.startsWith("#EXTINF")) {
             const parts = line.split(",");
-            name = parts.length > 1 ? parts[1].trim() : "Unbenannt";
-        } else if (line.startsWith("http://") || line.startsWith("https://")) {
-            channels.push({ name, url: line });
-        }
-    });
+            name = parts[1]?.trim() || "Unbenannt";
+        } else if (line.startsWith("http")) {
+            const isHLS = line.endsWith(".m3u8");
 
-    channels = channels.map(ch => {
-        const key = ch.name.toLowerCase();
-        if (directStreamOverrides[key]) {
-            return { ...ch, url: directStreamOverrides[key] };
+            channels.push({
+                name,
+                url: isHLS
+                    ? line                      // HLS direkt
+                    : proxy + encodeURIComponent(line) // Web über Proxy
+            });
         }
-        return ch;
     });
 
     renderList();
-    if (channels.length > 0) {
-        playChannel(0);
-        setStatus("Playlist geladen. ANT1 wird gestartet...", "");
-    } else {
-        setStatus("Playlist geladen, aber keine Kanäle gefunden.", "error");
-    }
+    playChannel(0);
 }
 
 function renderList() {
@@ -220,124 +185,50 @@ function renderList() {
         const div = document.createElement("div");
         div.textContent = ch.name;
         div.className = "channel";
-        div.tabIndex = 0;
-
         div.onclick = () => handleChannel(ch, i);
-        div.onkeydown = (e) => { if (e.key === "Enter") handleChannel(ch, i); };
-
         list.appendChild(div);
     });
-
-    if (list.children.length > 0) list.children[0].focus();
 }
 
-async function handleChannel(ch, i) {
+function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
 
+    // Web-only Kanäle → iframe + Proxy
     if (webOnlyChannels[name]) {
         stopVideo();
         iframe.style.display = "block";
-        iframe.src = proxyBase + encodeURIComponent(webOnlyChannels[name]);
-        updateFullscreenButton();
-        setStatus("Web-Kanal über Proxy: " + name, "");
-        updateActiveChannel(i);
+        iframe.src = proxy + encodeURIComponent(webOnlyChannels[name]);
+        setStatus("Web-Kanal über Proxy: " + ch.name);
         return;
     }
 
+    // HLS → direkt
     iframe.style.display = "none";
-    iframe.src = "";
-    playChannel(i);
-    updateFullscreenButton();
-    updateActiveChannel(i);
+    playChannel(index);
 }
 
-function updateActiveChannel(index) {
-    document.querySelectorAll(".channel").forEach((ch, i) => {
-        ch.classList.toggle("active", i === index);
-    });
+function playChannel(index) {
+    const ch = channels[index];
+    playStream(ch.url, ch.name);
 }
 
-function playChannel(i) {
-    if (!channels[i] || !channels[i].url) return;
-    playDirect(channels[i].url, channels[i].name);
-}
-
-function playDirect(url, channelName = "Kanal") {
+function playStream(url, name) {
     const video = document.getElementById("video");
 
-    if (hls) {
-        hls.destroy();
-        hls = null;
-    }
+    if (hls) { hls.destroy(); hls = null; }
 
-    setStatus("Streaming: " + channelName + "\nURL: " + url, "");
-    console.log("Playing:", url);
+    setStatus("Starte Stream: " + name);
 
     if (Hls.isSupported()) {
-        hls = new Hls({
-            debug: false,
-            enableWorker: true,
-            maxBufferLength: 30,
-            maxBufferSize: 60 * 1000 * 1000,
-            fragLoadingTimeOut: 20000,
-            fragLoadingMaxRetry: 6,
-            levelLoadingTimeOut: 10000,
-            levelLoadingMaxRetry: 4
-        });
-
+        hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
-
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            console.log("Manifest parsed OK");
-            setStatus("Manifest geladen. Video startet...", "success");
-            video.play().catch(() => setStatus("Autoplay blockiert. Bitte Play drücken.", "error"));
-        });
-
-        hls.on(Hls.Events.ERROR, (event, data) => {
-            console.error("HLS error:", data);
-            if (data && data.fatal) {
-                const msg = "Fatal HLS error: " + (data.reason || "unknown") + "\nType: " + (data.type || "unknown");
-                setStatus(msg, "error");
-            } else {
-                setStatus("HLS-Fehler: Nicht fatal, läuft weiter...", "error");
-            }
-        });
-
-        hls.on(Hls.Events.FRAG_LOADED, () => {
-            setStatus("Fragmente geladen. Stream läuft.", "success");
-        });
-
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-        video.addEventListener('loadedmetadata', () => {
-            setStatus("Safari Fallback: Metadata geladen.", "success");
-            video.play().catch(() => setStatus("Autoplay blockiert. Bitte Play drücken.", "error"));
-        }, { once: true });
-        video.addEventListener('error', () => {
-            setStatus("Video-Fehler im Safari Fallback.", "error");
-        }, { once: true });
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
     } else {
-        setStatus("HLS wird in diesem Browser nicht unterstützt.", "error");
+        video.src = url;
+        video.play();
     }
-}
-
-function enterFullscreen() {
-    const iframe = document.getElementById("iframe");
-    if (iframe.style.display === "block") {
-        if (iframe.requestFullscreen) iframe.requestFullscreen();
-        else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
-        else if (iframe.msRequestFullscreen) iframe.msRequestFullscreen();
-    }
-}
-
-document.getElementById("fsBtn").onclick = enterFullscreen;
-
-function updateFullscreenButton() {
-    const iframe = document.getElementById("iframe");
-    const fsBtn = document.getElementById("fsBtn");
-    fsBtn.style.display = iframe.style.display === "block" ? "block" : "none";
 }
 
 loadPlaylist();
