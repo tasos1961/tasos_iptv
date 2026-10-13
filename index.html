@@ -49,6 +49,11 @@ body {
     display: none;
 }
 
+/* Sandbox verhindert Edge‑Crash */
+#iframe[sandbox] {
+    background: #000;
+}
+
 .channel {
     padding: 18px;
     font-size: 22px;
@@ -59,21 +64,6 @@ body {
 .channel.active {
     background: #2a5f2a;
     font-weight: bold;
-}
-
-#fsBtn {
-    position: absolute;
-    right: 15px;
-    top: 15px;
-    z-index: 9999;
-    padding: 10px 15px;
-    font-size: 18px;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    border: 1px solid #666;
-    border-radius: 6px;
-    cursor: pointer;
-    display: none;
 }
 
 #status {
@@ -99,22 +89,22 @@ body {
 
 <div id="playerArea">
     <video id="video" controls autoplay playsinline></video>
-    <iframe id="iframe"></iframe>
-    <button id="fsBtn">Fullscreen</button>
+
+    <!-- Sandbox verhindert Edge‑Absturz -->
+    <iframe id="iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+
     <div id="status">Status: initialisiert</div>
 </div>
 
 <script>
-const proxy = "http://85.190.112.166:3000/api/proxy?url=";
+const proxy = "http://85.190.112.166:3000/api/proxy?lite=1&url=";
 
-// Deine GitHub Playlist
 const playlistURL =
     "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
 
 let channels = [];
 let hls = null;
 
-// Web-only Seiten (immer über Proxy im iframe)
 const webOnlyChannels = {
     "ant1life": "https://www.antenna.gr/live",
     "mega hd": "https://www.megatv.com/live",
@@ -135,7 +125,7 @@ function stopVideo() {
     video.src = "";
     if (hls) { hls.destroy(); hls = null; }
 
-    iframe.src = "";
+    iframe.src = "about:blank";
     iframe.style.display = "none";
 }
 
@@ -167,8 +157,8 @@ function parseM3U(data) {
             channels.push({
                 name,
                 url: isHLS
-                    ? line                      // HLS direkt
-                    : proxy + encodeURIComponent(line) // Web über Proxy
+                    ? line
+                    : proxy + encodeURIComponent(line)
             });
         }
     });
@@ -194,16 +184,17 @@ function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
 
-    // Web-only Kanäle → iframe + Proxy
     if (webOnlyChannels[name]) {
         stopVideo();
         iframe.style.display = "block";
+
+        // Proxy + Lite‑Modus → Edge stürzt nicht mehr ab
         iframe.src = proxy + encodeURIComponent(webOnlyChannels[name]);
+
         setStatus("Web-Kanal über Proxy: " + ch.name);
         return;
     }
 
-    // HLS → direkt
     iframe.style.display = "none";
     playChannel(index);
 }
