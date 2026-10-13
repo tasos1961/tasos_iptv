@@ -174,11 +174,7 @@ function parseM3U(data) {
     });
 
     renderList();
-    
-    // Wichtig: Den ersten Kanal sicher über die Weblayout-Prüfung starten
-    if (channels.length > 0) {
-        handleChannel(channels[0], 0);
-    }
+    playChannel(0);
 }
 
 function renderList() {
@@ -189,7 +185,6 @@ function renderList() {
         const div = document.createElement("div");
         div.textContent = ch.name;
         div.className = "channel";
-        div.id = "ch-" + i; // ID hinzugefügt für aktive Markierung
         div.onclick = () => handleChannel(ch, i);
         list.appendChild(div);
     });
@@ -198,26 +193,23 @@ function renderList() {
 function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
     const iframe = document.getElementById("iframe");
-    const video = document.getElementById("video");
 
-    // Visuelles Highlight in der Liste aktualisieren
-    document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
-    const activeEl = document.getElementById("ch-" + index);
-    if (activeEl) activeEl.classList.add('active');
-
-    // Web-only Kanäle (z.B. ant1life) -> iframe + Proxy aktivieren
+    // Web-only Kanäle → iframe + Proxy
     if (webOnlyChannels[name]) {
         stopVideo();
-        video.style.display = "none";
         iframe.style.display = "block";
         iframe.src = proxy + encodeURIComponent(webOnlyChannels[name]);
         setStatus("Web-Kanal über Proxy: " + ch.name);
         return;
     }
 
-    // Normale IPTV HLS Streams (.m3u8) -> Video-Player aktivieren
+    // HLS → direkt
     iframe.style.display = "none";
-    video.style.display = "block";
+    playChannel(index);
+}
+
+function playChannel(index) {
+    const ch = channels[index];
     playStream(ch.url, ch.name);
 }
 
