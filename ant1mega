@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Griechisches Live TV</title>
+    <!-- HLS-Bibliothek für den Smart TV Browser -->
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        body { 
+            margin: 0; 
+            background: #111; 
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+        }
+        /* Das Menü für die Senderwahl */
+        .menu {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            background: #0056b3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn:hover, .btn:focus {
+            background: #007bff;
+            outline: 3px solid #fff; /* Hilft beim Navigieren mit der TV-Fernbedienung */
+        }
+        .btn.active {
+            background: #28a745;
+        }
+        video { 
+            width: 90%; 
+            max-width: 1024px; 
+            background: black;
+            box-shadow: 0px 4px 20px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Menü-Knöpfe -->
+    <div class="menu">
+        <button class="btn" id="btn-ant1" onclick="playChannel('ant1')">ANT1 HD</button>
+        <button class="btn" id="btn-mega" onclick="playChannel('mega')">MEGA Life</button>
+    </div>
+
+    <!-- Der Video-Player -->
+    <video id="video" controls autoplay playsinline></video>
+
+    <script>
+        const video = document.getElementById('video');
+        let hls = null;
+
+        // Die Stream-Links der Kanäle
+        const channels = {
+            ant1: "https://antennaplus.gr",
+            mega: "https://smart-tv-data.com"
+        };
+
+        // Der AllOrigins-Proxy
+        const proxyPrefix = "https://allorigins.win";
+
+        function playChannel(channelKey) {
+            // 1. Richtigen Stream-Link auswählen und für den Proxy vorbereiten
+            const originalUrl = channels[channelKey];
+            const proxiedUrl = proxyPrefix + encodeURIComponent(originalUrl);
+
+            // 2. Aktive optische Markierung an den Knöpfen ändern
+            document.getElementById('btn-ant1').classList.remove('active');
+            document.getElementById('btn-mega').classList.remove('active');
+            document.getElementById('btn-' + channelKey).classList.add('active');
+
+            // 3. Alten Stream stoppen, falls einer läuft
+            if (hls) {
+                hls.destroy();
+            }
+
+            // 4. Neuen Stream im VIDAA-Browser starten
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    lowLatencyMode: true,
+                    backBufferLength: 90
+                });
+                hls.loadSource(proxiedUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    video.play().catch(e => console.log("Autoplay blockiert:", e));
+                });
+                
+                // Fehlerbehandlung, falls der Proxy blockiert wird
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        console.error("Streaming-Fehler:", data.type);
+                    }
+                });
+
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = proxiedUrl;
+                video.addEventListener('loadedmetadata', function() {
+                    video.play();
+                });
+            }
+        }
+
+        // Automatisch ANT1 HD beim ersten Laden der Seite starten
+        window.onload = function() {
+            playChannel('ant1');
+        };
+    </script>
+
+</body>
+</html>
