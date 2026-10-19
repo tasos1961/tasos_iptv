@@ -181,19 +181,20 @@ function renderList() {
 
 function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
-    const iframe = document.getElementById("iframe");
 
+    // Web‑Kanäle → neuen Tab öffnen
     if (webOnlyChannels[name]) {
-        stopVideo();
-        iframe.style.display = "block";
-        iframe.src = proxy + encodeURIComponent(webOnlyChannels[name]);
-        setStatus("Web-Kanal über Proxy: " + ch.name);
+        const url = proxy + encodeURIComponent(webOnlyChannels[name]);
+        window.open(url, "_blank");   // 🔥 Öffnet Mega HD in neuem Tab
+        setStatus("Web-Kanal geöffnet: " + ch.name);
         return;
     }
 
-    iframe.style.display = "none";
+    // Normale Streams
+    document.getElementById("iframe").style.display = "none";
     playChannel(index);
 }
+
 
 function playChannel(index) {
     const ch = channels[index];
