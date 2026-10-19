@@ -186,11 +186,29 @@ function handleChannel(ch, index) {
 
     // Web‑Kanäle → neuen Tab öffnen
     if (webOnlyChannels[name]) {
-        const url = proxy + encodeURIComponent(webOnlyChannels[name]);
-        window.open(url, "_blank");   // 🔥 Öffnet Mega HD in neuem Tab
+        const proxyUrl = proxy + encodeURIComponent(webOnlyChannels[name]);
+        const newTab = window.open(proxyUrl, "_blank");   // 🔥 Öffnet Web‑Kanal über Proxy
+
+        // Fallback: falls Proxy nicht erreichbar ist, öffne Original‑Seite
+        setTimeout(() => {
+            try {
+                if (!newTab || newTab.closed) {
+                    window.open(webOnlyChannels[name], "_blank");
+                }
+            } catch (e) {
+                window.open(webOnlyChannels[name], "_blank");
+            }
+        }, 2000);
+
         setStatus("Web-Kanal geöffnet: " + ch.name);
         return;
     }
+
+    // Normale Streams (HLS)
+    document.getElementById("iframe").style.display = "none";
+    playChannel(index);
+}
+
 
     // Normale Streams
     document.getElementById("iframe").style.display = "none";
