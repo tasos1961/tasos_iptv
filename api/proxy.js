@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         res.setHeader("X-Frame-Options", "ALLOWALL");
         res.setHeader("Content-Security-Policy", "frame-ancestors *");
 
-        // Spezialfall: Skai TV – nur den Player extrahieren
+        // Spezialfall: Skai TV – nur den Player extrahieren und zentrieren
         if (target.includes("skai.gr/tv/live")) {
             const html = await response.text();
 
@@ -36,7 +36,45 @@ export default async function handler(req, res) {
                 html.match(/<div[^>]*id="live-player"[^>]*>[\s\S]*?<\/div>/i);
 
             res.setHeader("Content-Type", "text/html; charset=utf-8");
-            res.send(match ? match[0] : "<h3>Player nicht gefunden</h3>");
+
+            if (match) {
+                const playerHTML = `
+                    <html>
+                    <head>
+                        <style>
+                            body {
+                                background-color: #000;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                height: 100vh;
+                                margin: 0;
+                            }
+                            video {
+                                width: 90%;
+                                height: auto;
+                                max-height: 90vh;
+                                outline: none;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${match[0]}
+                        <script>
+                            const vid = document.querySelector('video');
+                            if (vid) {
+                                vid.setAttribute('controls', 'true');
+                                vid.setAttribute('autoplay', 'true');
+                                vid.play().catch(()=>{});
+                            }
+                        </script>
+                    </body>
+                    </html>
+                `;
+                res.send(playerHTML);
+            } else {
+                res.send("<h3 style='color:white;text-align:center;'>Player nicht gefunden</h3>");
+            }
             return;
         }
 
