@@ -168,15 +168,27 @@ function renderList() {
 function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
 
-    // 🔥 Web‑Kanäle → neuen Tab öffnen + Fallback
+    // Web‑Kanäle → neuen Tab öffnen + Fallback
     if (webOnlyChannels[name]) {
         const proxyUrl = proxy + encodeURIComponent(webOnlyChannels[name]);
-        const newTab = window.open(proxyUrl, "_blank");
+        let newTab;
 
-        // Fallback falls Proxy nicht erreichbar ist
+        try {
+            newTab = window.open(proxyUrl, "_blank");
+        } catch (e) {
+            console.error("Fehler beim Öffnen des Proxy-Tabs:", e);
+        }
+
+        // Fallback: falls Proxy nicht erreichbar ist oder 404 liefert
         setTimeout(() => {
             try {
                 if (!newTab || newTab.closed) {
+                    window.open(webOnlyChannels[name], "_blank");
+                } else if (
+                    newTab.document.title.includes("404") ||
+                    newTab.document.body.innerText.includes("DEPLOYMENT_NOT_FOUND")
+                ) {
+                    newTab.close();
                     window.open(webOnlyChannels[name], "_blank");
                 }
             } catch (e) {
