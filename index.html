@@ -49,7 +49,6 @@ body {
     display: none;
 }
 
-/* Sandbox verhindert Edge‑Crash */
 #iframe[sandbox] {
     background: #000;
 }
@@ -89,28 +88,28 @@ body {
 
 <div id="playerArea">
     <video id="video" controls autoplay playsinline></video>
-
-    <!-- Sandbox verhindert Edge‑Absturz -->
     <iframe id="iframe" sandbox="allow-scripts allow-same-origin"></iframe>
-
     <div id="status">Status: initialisiert</div>
 </div>
 
 <script>
-const proxy = "http://85.190.112.166:3000/api/proxy?lite=1&url=";
+// 🔥 Dein stabiler Vercel‑Proxy (Variante B)
+const proxy = "https://tasos-iptv.vercel.app/api/proxy?url=";
 
+// Playlist
 const playlistURL =
     "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
 
 let channels = [];
 let hls = null;
 
+// Web‑Kanäle (immer über Proxy)
 const webOnlyChannels = {
    "ant1life": "https://www.antenna.gr/live",
    "mega hd": "https://www.megatv.com/live",
-    "makedonia tv": "https://www.antenna.gr/live",
-    "mad": "https://www.youtube.com/c/madtvgreece/live",
-    "euronews": "https://www.youtube.com/euronewsGreek/live"
+   "makedonia tv": "https://www.antenna.gr/live",
+   "mad": "https://www.youtube.com/c/madtvgreece/live",
+   "euronews": "https://www.youtube.com/euronewsGreek/live"
 };
 
 function setStatus(msg) {
@@ -187,10 +186,7 @@ function handleChannel(ch, index) {
     if (webOnlyChannels[name]) {
         stopVideo();
         iframe.style.display = "block";
-
-        // Proxy + Lite‑Modus → Edge stürzt nicht mehr ab
         iframe.src = proxy + encodeURIComponent(webOnlyChannels[name]);
-
         setStatus("Web-Kanal über Proxy: " + ch.name);
         return;
     }
