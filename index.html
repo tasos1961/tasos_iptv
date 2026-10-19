@@ -170,31 +170,30 @@ function renderList() {
 function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
 
-    // Web‑Kanäle → neuen Tab öffnen + Player stoppen
-    if (webOnlyChannels[name]) {
+    // ⭐ Clean-View für skaiweb
+    if (name === "skaiweb") {
 
-        // ⭐ WICHTIG: Player stoppen bevor Web-Kanal geöffnet wird
+        // laufenden Stream stoppen
+        stopVideo();
+
+        const playerArea = document.getElementById("playerArea");
+        playerArea.innerHTML = `
+            <iframe
+                src="https://www.skai.gr/tv/live/"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+            ></iframe>
+            <div id="status">Skai Live (Clean-View)</div>
+        `;
+        return;
+    }
+
+    // andere Web-Kanäle → neuer Tab
+    if (webOnlyChannels[name]) {
         stopVideo();
 
         const proxyUrl = proxy + encodeURIComponent(webOnlyChannels[name]);
-        let newTab;
-
-        try {
-            newTab = window.open(proxyUrl, "_blank");
-        } catch (e) {
-            console.error("Fehler beim Öffnen des Proxy-Tabs:", e);
-        }
-
-        // Fallback: falls Proxy nicht erreichbar ist
-        setTimeout(() => {
-            try {
-                if (!newTab || newTab.closed) {
-                    window.open(webOnlyChannels[name], "_blank");
-                }
-            } catch (e) {
-                window.open(webOnlyChannels[name], "_blank");
-            }
-        }, 2000);
+        window.open(proxyUrl, "_blank");
 
         setStatus("Web-Kanal geöffnet: " + ch.name);
         return;
@@ -203,6 +202,7 @@ function handleChannel(ch, index) {
     // Normale Streams (HLS)
     playChannel(index);
 }
+
 
 function playChannel(index) {
     const ch = channels[index];
