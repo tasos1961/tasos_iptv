@@ -16,10 +16,7 @@ export default async function handler(req, res) {
     };
 
     try {
-        const response = await fetch(target, {
-            headers,
-            redirect: "follow"
-        });
+        const response = await fetch(target, { headers, redirect: "follow" });
 
         // Sicherheits- und CORS-Header
         res.setHeader("Access-Control-Allow-Origin", "*");
@@ -31,8 +28,13 @@ export default async function handler(req, res) {
         // Spezialfall: Skai TV – nur den Player extrahieren
         if (target.includes("skai.gr/tv/live")) {
             const html = await response.text();
-            // Versuche, den Player-Container zu finden
-            const match = html.match(/<div[^>]*id="player"[^>]*>[\s\S]*?<\/div>/i);
+
+            // Suche nach möglichen Player-Containern
+            const match =
+                html.match(/<video[^>]*>[\s\S]*?<\/video>/i) ||
+                html.match(/<div[^>]*class="video-player"[^>]*>[\s\S]*?<\/div>/i) ||
+                html.match(/<div[^>]*id="live-player"[^>]*>[\s\S]*?<\/div>/i);
+
             res.setHeader("Content-Type", "text/html; charset=utf-8");
             res.send(match ? match[0] : "<h3>Player nicht gefunden</h3>");
             return;
