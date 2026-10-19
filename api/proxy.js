@@ -28,6 +28,16 @@ export default async function handler(req, res) {
         res.setHeader("X-Frame-Options", "ALLOWALL");
         res.setHeader("Content-Security-Policy", "frame-ancestors *");
 
+        // Spezialfall: Skai TV – nur den Player extrahieren
+        if (target.includes("skai.gr/tv/live")) {
+            const html = await response.text();
+            // Versuche, den Player-Container zu finden
+            const match = html.match(/<div[^>]*id="player"[^>]*>[\s\S]*?<\/div>/i);
+            res.setHeader("Content-Type", "text/html; charset=utf-8");
+            res.send(match ? match[0] : "<h3>Player nicht gefunden</h3>");
+            return;
+        }
+
         // Content-Type übernehmen
         const contentType = response.headers.get("content-type") || "application/octet-stream";
         res.setHeader("Content-Type", contentType);
