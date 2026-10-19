@@ -83,7 +83,7 @@ body {
 </div>
 
 <script>
-// 🔥 Dein stabiler Vercel‑Proxy (Variante B)
+// 🔥 Dein stabiler Vercel‑Proxy
 const proxy = "https://tasosiptv.vercel.app/api/proxy?url=";
 
 // Playlist
@@ -109,9 +109,9 @@ function setStatus(msg) {
 
 function stopVideo() {
     const video = document.getElementById("video");
-    video.pause();
+    try { video.pause(); } catch(e) {}
     video.src = "";
-    if (hls) { hls.destroy(); hls = null; }
+    if (hls) { try { hls.destroy(); } catch(e) {} hls = null; }
 }
 
 function loadPlaylist() {
@@ -168,8 +168,12 @@ function renderList() {
 function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
 
-    // Web‑Kanäle → neuen Tab öffnen + Fallback
+    // Web‑Kanäle → neuen Tab öffnen + Player stoppen
     if (webOnlyChannels[name]) {
+
+        // ⭐ WICHTIG: Player stoppen bevor Web-Kanal geöffnet wird
+        stopVideo();
+
         const proxyUrl = proxy + encodeURIComponent(webOnlyChannels[name]);
         let newTab;
 
@@ -179,16 +183,10 @@ function handleChannel(ch, index) {
             console.error("Fehler beim Öffnen des Proxy-Tabs:", e);
         }
 
-        // Fallback: falls Proxy nicht erreichbar ist oder 404 liefert
+        // Fallback: falls Proxy nicht erreichbar ist
         setTimeout(() => {
             try {
                 if (!newTab || newTab.closed) {
-                    window.open(webOnlyChannels[name], "_blank");
-                } else if (
-                    newTab.document.title.includes("404") ||
-                    newTab.document.body.innerText.includes("DEPLOYMENT_NOT_FOUND")
-                ) {
-                    newTab.close();
                     window.open(webOnlyChannels[name], "_blank");
                 }
             } catch (e) {
