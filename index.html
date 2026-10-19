@@ -116,6 +116,15 @@ function stopVideo() {
     if (hls) { try { hls.destroy(); } catch(e) {} hls = null; }
 }
 
+    function resetPlayerArea() {
+    const playerArea = document.getElementById("playerArea");
+    playerArea.innerHTML = `
+        <video id="video" controls autoplay playsinline></video>
+        <div id="status">Status: initialisiert</div>
+    `;
+}
+
+
 function loadPlaylist() {
     setStatus("Playlist wird geladen...");
     fetch(playlistURL)
@@ -190,6 +199,8 @@ function handleChannel(ch, index) {
 
     // andere Web-Kanäle → neuer Tab
     if (webOnlyChannels[name]) {
+        // sicherstellen, dass der normale Player wieder da ist
+        resetPlayerArea();
         stopVideo();
 
         const proxyUrl = proxy + encodeURIComponent(webOnlyChannels[name]);
@@ -200,8 +211,11 @@ function handleChannel(ch, index) {
     }
 
     // Normale Streams (HLS)
+    // hier ebenfalls sicherstellen, dass der Player-Bereich wieder normal ist
+    resetPlayerArea();
     playChannel(index);
 }
+
 
 
 function playChannel(index) {
