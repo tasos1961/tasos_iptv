@@ -103,7 +103,7 @@ const webOnlyChannels = {
     "alphaweb": "https://www.alphatv.gr",
     "skai sport": "https://www.sportfmtv.gr/el",
     "skaiweb": "https://www.skai.gr/tv/live/",
-    "makedonia tv": "https://www.antenna.gr/live",
+    "makweb": "https://www.antenna.gr/livemak",
     "mad": "https://www.youtube.com/c/madtvgreece/live",
     "euronews": "https://www.youtube.com/euronewsGreek/live"
 };
@@ -226,6 +226,24 @@ function handleChannel(ch, index) {
         `;
         return;
     }
+
+    // ⭐ Clean-View für makweb
+if (name === "makweb") {
+
+    stopVideo();
+
+    const playerArea = document.getElementById("playerArea");
+    playerArea.innerHTML = `
+        <iframe
+            src="https://www.antenna.gr/livemak"
+            style="width:100%;height:100%;border:none;background:#000;"
+            sandbox="allow-scripts allow-same-origin allow-popups"
+        ></iframe>
+        <div id="status">Makedonia TV Live (Clean-View)</div>
+    `;
+    return;
+}
+
 
     // andere Web-Kanäle → neuer Tab
     if (webOnlyChannels[name]) {
