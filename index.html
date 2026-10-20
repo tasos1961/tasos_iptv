@@ -242,6 +242,25 @@ function handleChannel(ch, index) {
         return;
     }
 
+    // ⭐ Clean-View für alphaweb
+if (name === "alphaweb") {
+
+    resetPlayerArea();
+    stopVideo();
+
+    const playerArea = document.getElementById("playerArea");
+    playerArea.innerHTML = `
+        <iframe
+            src="https://www.alphatv.gr"
+            style="width:100%;height:100%;border:none;background:#000;"
+            sandbox="allow-scripts allow-same-origin allow-popups"
+        ></iframe>
+        <div id="status">Alpha TV Live (Clean-View)</div>
+    `;
+    return;
+}
+
+
     // andere Web-Kanäle → neuer Tab
     if (webOnlyChannels[name]) {
         resetPlayerArea();
