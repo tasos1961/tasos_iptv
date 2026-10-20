@@ -310,23 +310,23 @@ if (name === "mad") {
     return;
 }
 
-    // ⭐ Clean‑View für euronews
+// ⭐ Clean-View für euronews greek über Proxy
 if (name === "euronews greek") {
-    resetPlayerArea();
-    stopVideo();
+        resetPlayerArea();
+        stopVideo();
+        const playerArea = document.getElementById("playerArea");
+        playerArea.innerHTML = `
+            <iframe
+               src="https://gr.euronews.com/live"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+            ></iframe>
+            <div id="status">euronews Live (Clean-View)</div>
+        `;
+        return;
+    }
 
-    const playerArea = document.getElementById("playerArea");
-    playerArea.innerHTML = `
-        <iframe
-            src="https://gr.euronews.com/live"
-            style="width:100%;height:100%;border:none;background:#000;"
-            allow="autoplay; encrypted-media"
-        ></iframe>
-        <div id="status">Euronews Greek Live (Clean-View)</div>
-    `;
-    return;
-}
-
+    
 
 
     // andere Web-Kanäle → neuer Tab
