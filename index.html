@@ -258,7 +258,6 @@ function handleChannel(ch, index) {
         return;
     }
 
-    // ⭐ Clean-View für alphaweb
 // ⭐ Clean-View für alphaweb über Proxy
 if (name === "alphaweb") {
     resetPlayerArea();
@@ -311,18 +310,15 @@ if (name === "mad") {
     return;
 }
 
-   
+    // andere Web-Kanäle → neuer Tab (ohne Proxy)
+if (webOnlyChannels[name]) {
+    resetPlayerArea();
+    stopVideo();
+    window.open(webOnlyChannels[name], "_blank");
+    setStatus("Web-Kanal geöffnet: " + ch.name);
+    return;
+}
 
-
-    // andere Web-Kanäle → neuer Tab
-    if (webOnlyChannels[name]) {
-        resetPlayerArea();
-        stopVideo();
-        const proxyUrl = proxy + encodeURIComponent(webOnlyChannels[name]);
-        window.open(proxyUrl, "_blank");
-        setStatus("Web-Kanal geöffnet: " + ch.name);
-        return;
-    }
 
     // Normale Streams (HLS)
     resetPlayerArea();
