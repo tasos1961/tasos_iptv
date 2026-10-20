@@ -243,19 +243,19 @@ function handleChannel(ch, index) {
     }
 
     // ⭐ Clean-View für alphaweb
+// ⭐ Clean-View für alphaweb über Proxy
 if (name === "alphaweb") {
-
     resetPlayerArea();
     stopVideo();
 
     const playerArea = document.getElementById("playerArea");
     playerArea.innerHTML = `
         <iframe
-            src="https://www.alphatv.gr/live"
+            src="${proxy + encodeURIComponent('https://www.alphatv.gr')}"
             style="width:100%;height:100%;border:none;background:#000;"
             sandbox="allow-scripts allow-same-origin allow-popups"
         ></iframe>
-        <div id="status">Alpha TV Live (Clean-View)</div>
+        <div id="status">Alpha TV Live (Clean-View über Proxy)</div>
     `;
     return;
 }
