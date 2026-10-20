@@ -98,8 +98,9 @@ let hls = null;
 
 // Web‑Kanäle → sollen IMMER im neuen Tab geöffnet werden
 const webOnlyChannels = {
-    "EuronewsGR": "https://gr.euronews.com/live"    
+    "euronewsgr": "https://gr.euronews.com/live"
 };
+
     
 
 function setStatus(msg) {
@@ -308,19 +309,18 @@ if (name === "mad") {
     return;
 }
 
-    // andere Web-Kanäle → neuer Tab (ohne Proxy)
-// andere Web-Kanäle → neuer Tab (ohne Proxy)
+   // andere Web-Kanäle → neuer Tab (ohne Proxy)
 if (webOnlyChannels[name]) {
     resetPlayerArea();
     stopVideo();
     window.open(webOnlyChannels[name], "_blank");
     setStatus("Web-Kanal geöffnet: " + ch.name);
-    return; // hier wird korrekt abgebrochen
-} else {
-    // Normale Streams (HLS)
-    resetPlayerArea();
-    playChannel(index);
+    return;
 }
+
+// Normale Streams (HLS)
+resetPlayerArea();
+playChannel(index);
 
 
 
