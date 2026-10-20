@@ -99,9 +99,8 @@ let hls = null;
 // Web‑Kanäle → sollen IMMER im neuen Tab geöffnet werden
 const webOnlyChannels = {
    
-    "skai sport": "https://www.sportfmtv.gr/el",
-     "mad": "https://www.youtube.com/c/madtvgreece/live",
-    "euronews": "https://www.youtube.com/euronewsGreek/live"
+    "perimene": "https://www.sportfmtv.gr/el",
+    
 };
 
 function setStatus(msg) {
@@ -275,6 +274,59 @@ if (name === "alphaweb") {
     `;
     return;
 }
+
+    // ⭐ Clean‑View für skai sport
+if (name === "skai sport") {
+    resetPlayerArea();
+    stopVideo();
+
+    const playerArea = document.getElementById("playerArea");
+    playerArea.innerHTML = `
+        <iframe
+            src="https://www.sportfmtv.gr/el"
+            style="width:100%;height:100%;border:none;background:#000;"
+            sandbox="allow-scripts allow-same-origin allow-popups"
+        ></iframe>
+        <div id="status">SKAI Sport Live (Clean-View)</div>
+    `;
+    return;
+}
+
+
+    // ⭐ Clean‑View für mad
+if (name === "mad") {
+    resetPlayerArea();
+    stopVideo();
+
+    const playerArea = document.getElementById("playerArea");
+    playerArea.innerHTML = `
+        <iframe
+            src="https://www.youtube.com/embed/live_stream?channel=UCpXqQnZzY1QYzZzY1QYzZzA"
+            style="width:100%;height:100%;border:none;background:#000;"
+            allow="autoplay; encrypted-media"
+        ></iframe>
+        <div id="status">MAD TV Live (Clean-View)</div>
+    `;
+    return;
+}
+
+    // ⭐ Clean‑View für euronews
+if (name === "euronews") {
+    resetPlayerArea();
+    stopVideo();
+
+    const playerArea = document.getElementById("playerArea");
+    playerArea.innerHTML = `
+        <iframe
+            src="https://www.youtube.com/embed/live_stream?channel=UCyoGb3SMlTlB8CLGV0t3m6Q"
+            style="width:100%;height:100%;border:none;background:#000;"
+            allow="autoplay; encrypted-media"
+        ></iframe>
+        <div id="status">Euronews Greek Live (Clean-View)</div>
+    `;
+    return;
+}
+
 
 
     // andere Web-Kanäle → neuer Tab
