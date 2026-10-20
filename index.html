@@ -194,6 +194,22 @@ function handleChannel(ch, index) {
         return;
     }
 
+    // ⭐ Clean-View für skaiweb
+    if (name === "deluxe") {
+        resetPlayerArea();
+        stopVideo();
+        const playerArea = document.getElementById("playerArea");
+        playerArea.innerHTML = `
+            <iframe
+                src="https://deluxemusic.de/mediathek/#google_vignette"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+            ></iframe>
+            <div id="status">Deluxe Live (Clean-View)</div>
+        `;
+        return;
+    }
+
     // ⭐ Clean-View für ant1web
     if (name === "ant1web") {
         resetPlayerArea();
