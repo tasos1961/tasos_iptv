@@ -184,10 +184,7 @@ function handleChannel(ch, index) {
 
     // ⭐ Clean-View für skaiweb
     if (name === "skaiweb") {
-
-        // laufenden Stream stoppen
         stopVideo();
-
         const playerArea = document.getElementById("playerArea");
         playerArea.innerHTML = `
             <iframe
@@ -200,21 +197,47 @@ function handleChannel(ch, index) {
         return;
     }
 
+    // ⭐ Clean-View für ant1web
+    if (name === "ant1web") {
+        stopVideo();
+        const playerArea = document.getElementById("playerArea");
+        playerArea.innerHTML = `
+            <iframe
+                src="https://www.antenna.gr/live"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+            ></iframe>
+            <div id="status">ANT1 Live (Clean-View)</div>
+        `;
+        return;
+    }
+
+    // ⭐ Clean-View für megaweb
+    if (name === "megaweb") {
+        stopVideo();
+        const playerArea = document.getElementById("playerArea");
+        playerArea.innerHTML = `
+            <iframe
+                src="https://www.megatv.com/live"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+            ></iframe>
+            <div id="status">Mega TV Live (Clean-View)</div>
+        `;
+        return;
+    }
+
     // andere Web-Kanäle → neuer Tab
     if (webOnlyChannels[name]) {
-        // sicherstellen, dass der normale Player wieder da ist
         resetPlayerArea();
         stopVideo();
-
         const proxyUrl = proxy + encodeURIComponent(webOnlyChannels[name]);
         window.open(proxyUrl, "_blank");
-
         setStatus("Web-Kanal geöffnet: " + ch.name);
         return;
     }
 
     // Normale Streams (HLS)
-    // hier ebenfalls sicherstellen, dass der Player-Bereich wieder normal ist
     resetPlayerArea();
     playChannel(index);
 }
