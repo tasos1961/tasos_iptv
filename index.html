@@ -184,6 +184,7 @@ function handleChannel(ch, index) {
 
     // ⭐ Clean-View für skaiweb
     if (name === "skaiweb") {
+        resetPlayerArea();
         stopVideo();
         const playerArea = document.getElementById("playerArea");
         playerArea.innerHTML = `
@@ -199,6 +200,7 @@ function handleChannel(ch, index) {
 
     // ⭐ Clean-View für ant1web
     if (name === "ant1web") {
+        resetPlayerArea();
         stopVideo();
         const playerArea = document.getElementById("playerArea");
         playerArea.innerHTML = `
@@ -212,26 +214,9 @@ function handleChannel(ch, index) {
         return;
     }
 
-    // ⭐ Clean-View für alphaweb
-if (name === "alphaweb") {
-
-    stopVideo();
-
-    const playerArea = document.getElementById("playerArea");
-    playerArea.innerHTML = `
-        <iframe
-            src="https://www.alphatv.gr/live"
-            style="width:100%;height:100%;border:none;background:#000;"
-            sandbox="allow-scripts allow-same-origin allow-popups"
-        ></iframe>
-        <div id="status">Alpha TV Live (Clean-View)</div>
-    `;
-    return;
-}
-
-
     // ⭐ Clean-View für megaweb
     if (name === "megaweb") {
+        resetPlayerArea();
         stopVideo();
         const playerArea = document.getElementById("playerArea");
         playerArea.innerHTML = `
@@ -246,22 +231,20 @@ if (name === "alphaweb") {
     }
 
     // ⭐ Clean-View für makweb
-if (name === "makweb") {
-
-    stopVideo();
-
-    const playerArea = document.getElementById("playerArea");
-    playerArea.innerHTML = `
-        <iframe
-            src="https://www.antenna.gr/livemak"
-            style="width:100%;height:100%;border:none;background:#000;"
-            sandbox="allow-scripts allow-same-origin allow-popups"
-        ></iframe>
-        <div id="status">Makedonia TV Live (Clean-View)</div>
-    `;
-    return;
-}
-
+    if (name === "makweb") {
+        resetPlayerArea();
+        stopVideo();
+        const playerArea = document.getElementById("playerArea");
+        playerArea.innerHTML = `
+            <iframe
+                src="https://www.antenna.gr/livemak"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+            ></iframe>
+            <div id="status">Makedonia TV Live (Clean-View)</div>
+        `;
+        return;
+    }
 
     // andere Web-Kanäle → neuer Tab
     if (webOnlyChannels[name]) {
@@ -277,6 +260,7 @@ if (name === "makweb") {
     resetPlayerArea();
     playChannel(index);
 }
+
 
 
 
