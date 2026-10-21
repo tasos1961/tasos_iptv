@@ -29,12 +29,17 @@ export default async function handler(req, res) {
         res.setHeader("Content-Security-Policy", "frame-ancestors *");
 
         // Content-Type übernehmen
-        const contentType = response.headers.get("content-type") || "application/octet-stream";
+        const contentType = response.headers.get("content-type") || "text/html";
         res.setHeader("Content-Type", contentType);
 
-        // Antwort weiterleiten
-        const buffer = Buffer.from(await response.arrayBuffer());
-        res.send(buffer);
+        // HTML-Inhalt anpassen: Padding/Margin entfernen
+        let body = await response.text();
+        if (contentType.includes("text/html")) {
+            body = body.replace(/<body[^>]*>/i, '<body style="margin:0;padding:0;overflow:hidden;">');
+            body = body.replace(/<html[^>]*>/i, '<html style="margin:0;padding:0;">');
+        }
+
+        res.send(body);
     } catch (err) {
         res.status(500).json({
             error: "Proxy error",
