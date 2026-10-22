@@ -41,13 +41,13 @@ export default async function handler(req, res) {
         // ⭐ HTML laden
         let html = await response.text();
 
-        // ⭐ Nur MegaWeb optimieren
-        const isMegaWeb =
+        // ⭐ Nur megaweb optimieren
+        const ismegaweb =
             target.includes("megatv.com") ||
             target.includes("mega") ||
             target.includes("Mega");
 
-        if (isMegaWeb) {
+        if (ismegaweb) {
             // Body-Abstand entfernen
             html = html.replace(/<body[^>]*>/i, '<body style="margin:0;padding:0;">');
 
