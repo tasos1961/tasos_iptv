@@ -21,6 +21,10 @@ export default async function handler(req, res) {
             redirect: "follow"
         });
 
+        // Content-Type übernehmen
+        const contentType = response.headers.get("content-type") || "application/octet-stream";
+        res.setHeader("Content-Type", contentType);
+
         // Sicherheits- und CORS-Header
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Access-Control-Allow-Headers", "*");
@@ -28,13 +32,50 @@ export default async function handler(req, res) {
         res.setHeader("X-Frame-Options", "ALLOWALL");
         res.setHeader("Content-Security-Policy", "frame-ancestors *");
 
-        // Content-Type übernehmen
-        const contentType = response.headers.get("content-type") || "application/octet-stream";
-        res.setHeader("Content-Type", contentType);
+        // Wenn es KEINE HTML-Seite ist → direkt weiterleiten (z.B. .m3u8, .ts)
+        if (!contentType.includes("text/html")) {
+            const buffer = Buffer.from(await response.arrayBuffer());
+            return res.send(buffer);
+        }
 
-        // Antwort weiterleiten
-        const buffer = Buffer.from(await response.arrayBuffer());
-        res.send(buffer);
+        // ⭐ HTML laden
+        let html = await response.text();
+
+        // ⭐ Nur MegaWeb optimieren
+        const isMegaWeb =
+            target.includes("megatv.com") ||
+            target.includes("mega") ||
+            target.includes("Mega");
+
+        if (isMegaWeb) {
+            // Body-Abstand entfernen
+            html = html.replace(/<body[^>]*>/i, '<body style="margin:0;padding:0;">');
+
+            // Header-Abstand entfernen
+            html = html.replace(/<header[^>]*>/i, '<header style="margin:0;padding:0;">');
+
+            // Top-Bar (Mega News / Live TV Buttons) nach oben schieben
+            html = html.replace(
+                /<div class="top-bar"/i,
+                '<div class="top-bar" style="margin-top:-25px;"'
+            );
+
+            // Abstand im Hauptbereich entfernen
+            html = html.replace(
+                /<main[^>]*>/i,
+                '<main style="margin:0;padding:0;">'
+            );
+
+            // Abstand über dem Player reduzieren
+            html = html.replace(
+                /<div class="player-container"/i,
+                '<div class="player-container" style="margin-top:-20px;"'
+            );
+        }
+
+        // ⭐ Optimierte HTML zurückgeben
+        res.send(html);
+
     } catch (err) {
         res.status(500).json({
             error: "Proxy error",
