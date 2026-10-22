@@ -41,35 +41,36 @@ export default async function handler(req, res) {
         // ⭐ HTML laden
         let html = await response.text();
 
-        // ⭐ Nur megaweb optimieren
-        const ismegaweb =
+        // ⭐ Erkennung der Web-Seiten
+        const isMegaWeb =
             target.includes("megatv.com") ||
             target.includes("mega") ||
             target.includes("Mega");
 
-        if (ismegaweb) {
-            // Body-Abstand entfernen
+        const isAnt1Web =
+            target.includes("antenna.gr") ||
+            target.includes("ant1") ||
+            target.includes("ANT1");
+
+        // ⭐ MegaWeb Optimierung
+        if (isMegaWeb) {
             html = html.replace(/<body[^>]*>/i, '<body style="margin:0;padding:0;">');
-
-            // Header-Abstand entfernen
             html = html.replace(/<header[^>]*>/i, '<header style="margin:0;padding:0;">');
+            html = html.replace(/<div class="top-bar"/i, '<div class="top-bar" style="margin-top:-25px;">');
+            html = html.replace(/<main[^>]*>/i, '<main style="margin:0;padding:0;">');
+            html = html.replace(/<div class="player-container"/i, '<div class="player-container" style="margin-top:-20px;">');
+        }
 
-            // Top-Bar (Mega News / Live TV Buttons) nach oben schieben
-            html = html.replace(
-                /<div class="top-bar"/i,
-                '<div class="top-bar" style="margin-top:-25px;"'
-            );
+        // ⭐ ANT1web Optimierung
+        if (isAnt1Web) {
+            html = html.replace(/<body[^>]*>/i, '<body style="margin:0;padding:0;">');
+            html = html.replace(/<header[^>]*>/i, '<header style="margin:0;padding:0;">');
+            html = html.replace(/<main[^>]*>/i, '<main style="margin:0;padding:0;">');
 
-            // Abstand im Hauptbereich entfernen
+            // ANT1 hat andere Struktur → Player-Container heißt anders
             html = html.replace(
-                /<main[^>]*>/i,
-                '<main style="margin:0;padding:0;">'
-            );
-
-            // Abstand über dem Player reduzieren
-            html = html.replace(
-                /<div class="player-container"/i,
-                '<div class="player-container" style="margin-top:-20px;"'
+                /<div class="live-player"/i,
+                '<div class="live-player" style="margin-top:-20px;">'
             );
         }
 
