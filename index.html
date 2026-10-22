@@ -178,7 +178,7 @@ function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
 
     // ⭐ Clean-View für skaiweb
-    if (name === "skaiweb") {
+   if (name.toLowerCase() === "skaiweb") {
         resetPlayerArea();
         stopVideo();
         const playerArea = document.getElementById("playerArea");
@@ -195,7 +195,7 @@ function handleChannel(ch, index) {
 
     
 // ⭐ Clean-View für Deluxe über Proxy
- if (name === "deluxe") {
+if (name.toLowerCase() === "deluxe") { {
         resetPlayerArea();
         stopVideo();
         const playerArea = document.getElementById("playerArea");
@@ -210,7 +210,7 @@ function handleChannel(ch, index) {
         return;
     }
     // ⭐ Clean-View für ant1web
-    if (name === "ant1web") {
+    if (name.toLowerCase() === "ant1web") {
         resetPlayerArea();
         stopVideo();
         const playerArea = document.getElementById("playerArea");
@@ -227,15 +227,16 @@ function handleChannel(ch, index) {
 
     // ⭐ Clean‑View für megaweb
 // ⭐ Clean‑View für megaweb
-if (name === "megaweb") {
+if (name.toLowerCase() === "megaweb") {
     resetPlayerArea();
     stopVideo();
 
     const playerArea = document.getElementById("playerArea");
     playerArea.innerHTML = `
         <iframe
+           src="https://tasosiptv.vercel.app/api/proxy?url=https://www.megatv.com/live"
             src="https://www.megatv.com/live"
-            style="width:100%;height:100%;border:none;background:#000;
+            style="width:100%;height:100%;border:none;margin-top:-25px;"
             sandbox="allow-scripts allow-same-origin allow-popups"
         ></iframe>
         <div id="status">Mega TV Live (Clean‑View)</div>
@@ -246,7 +247,7 @@ if (name === "megaweb") {
 
 
     // ⭐ Clean-View für makweb
-    if (name === "makweb") {
+   if (name.toLowerCase() === "makweb") {
         resetPlayerArea();
         stopVideo();
         const playerArea = document.getElementById("playerArea");
@@ -262,7 +263,7 @@ if (name === "megaweb") {
     }
 
 // ⭐ Clean-View für alphaweb über Proxy
-if (name === "alphaweb") {
+ if (name.toLowerCase() === "alphaweb") {
     resetPlayerArea();
     stopVideo();
 
@@ -279,7 +280,7 @@ if (name === "alphaweb") {
 }
 
     // ⭐ Clean‑View für skai sport
-if (name === "skai sport") {
+ if (name.toLowerCase() === "skai sport") {
     resetPlayerArea();
     stopVideo();
 
@@ -297,7 +298,7 @@ if (name === "skai sport") {
 
 
     // ⭐ Clean‑View für mad
-if (name === "mad") {
+ if (name.toLowerCase() === "mad") {
     resetPlayerArea();
     stopVideo();
 
