@@ -209,21 +209,22 @@ if (name.toLowerCase() === "deluxe") {
         `;
         return;
     }
-    // ⭐ Clean-View für ant1web
-    if (name.toLowerCase() === "ant1web") {
-        resetPlayerArea();
-        stopVideo();
-        const playerArea = document.getElementById("playerArea");
-        playerArea.innerHTML = `
-            <iframe
-                src="https://www.antenna.gr/live"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"
-            ></iframe>
-            <div id="status">ANT1 Live (Clean-View)</div>
-        `;
-        return;
-    }
+   
+ // ⭐ Clean-View für ant1web
+if (name.toLowerCase() === "ant1web") {
+    resetPlayerArea();
+    stopVideo();
+    const playerArea = document.getElementById("playerArea");
+    playerArea.innerHTML = `
+        <iframe
+            src="https://tasosiptv.vercel.app/api/proxy?url=https://www.antenna.gr/live"
+            style="width:100%;height:100%;border:none;background:#000;"
+            sandbox="allow-scripts allow-same-origin allow-popups"
+        ></iframe>
+        <div id="status">ANT1 Live (Clean-View)</div>
+    `;
+    return;
+}
 
     // ⭐ Clean‑View für megaweb
 // ⭐ Clean‑View für megaweb
