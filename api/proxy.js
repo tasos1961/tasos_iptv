@@ -1,3 +1,6 @@
+das ist mein proxy.js. kannst du das hier ändern?
+
+
 export default async function handler(req, res) {
     const target = req.query.url;
 
@@ -41,36 +44,35 @@ export default async function handler(req, res) {
         // ⭐ HTML laden
         let html = await response.text();
 
-        // ⭐ Erkennung der Web-Seiten
-        const isMegaWeb =
+        // ⭐ Nur megaweb optimieren
+        const ismegaweb =
             target.includes("megatv.com") ||
             target.includes("mega") ||
             target.includes("Mega");
 
-        const isAnt1Web =
-            target.includes("antenna.gr") ||
-            target.includes("ant1") ||
-            target.includes("ANT1");
-
-        // ⭐ MegaWeb Optimierung
-        if (isMegaWeb) {
+        if (ismegaweb) {
+            // Body-Abstand entfernen
             html = html.replace(/<body[^>]*>/i, '<body style="margin:0;padding:0;">');
-            html = html.replace(/<header[^>]*>/i, '<header style="margin:0;padding:0;">');
-            html = html.replace(/<div class="top-bar"/i, '<div class="top-bar" style="margin-top:-25px;">');
-            html = html.replace(/<main[^>]*>/i, '<main style="margin:0;padding:0;">');
-            html = html.replace(/<div class="player-container"/i, '<div class="player-container" style="margin-top:-20px;">');
-        }
 
-        // ⭐ ANT1web Optimierung
-        if (isAnt1Web) {
-            html = html.replace(/<body[^>]*>/i, '<body style="margin:0;padding:0;">');
+            // Header-Abstand entfernen
             html = html.replace(/<header[^>]*>/i, '<header style="margin:0;padding:0;">');
-            html = html.replace(/<main[^>]*>/i, '<main style="margin:0;padding:0;">');
 
-            // ANT1 hat andere Struktur → Player-Container heißt anders
+            // Top-Bar (Mega News / Live TV Buttons) nach oben schieben
             html = html.replace(
-                /<div class="live-player"/i,
-                '<div class="live-player" style="margin-top:-20px;">'
+                /<div class="top-bar"/i,
+                '<div class="top-bar" style="margin-top:-25px;"'
+            );
+
+            // Abstand im Hauptbereich entfernen
+            html = html.replace(
+                /<main[^>]*>/i,
+                '<main style="margin:0;padding:0;">'
+            );
+
+            // Abstand über dem Player reduzieren
+            html = html.replace(
+                /<div class="player-container"/i,
+                '<div class="player-container" style="margin-top:-20px;"'
             );
         }
 
