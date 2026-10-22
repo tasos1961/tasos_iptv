@@ -1,6 +1,3 @@
-das ist mein proxy.js. kannst du das hier ändern?
-
-
 export default async function handler(req, res) {
     const target = req.query.url;
 
