@@ -310,18 +310,13 @@ if (webOnlyChannels[name]) {
     resetPlayerArea();
     stopVideo();
 
-    const playerArea = document.getElementById("playerArea");
-    playerArea.innerHTML = `
-        <iframe
-            src="${webOnlyChannels[name]}"
-            style="width:100%;height:100%;border:none;background:#000;"
-            sandbox="allow-scripts allow-same-origin allow-popups"
-            onerror="window.location.href='index.html';"
-        ></iframe>
-        <div id="status">Web-Kanal: ${ch.name} (Clean-View)</div>
-    `;
+    // Seite direkt im selben Fenster öffnen (kein neuer Tab!)
+    window.location.href = webOnlyChannels[name];
+
+    setStatus("Web-Kanal geöffnet: " + ch.name);
     return;
 }
+
 
 // Normale Streams (HLS)
 resetPlayerArea();
