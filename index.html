@@ -226,7 +226,7 @@ if (name.toLowerCase() === "ant1web") {
     return;
 }
 
-    // ⭐ Clean‑View für megaweb
+   
 // ⭐ Clean‑View für megaweb
 if (name.toLowerCase() === "megaweb") {
     resetPlayerArea();
@@ -313,6 +313,22 @@ if (name.toLowerCase() === "megaweb") {
     `;
     return;
 }
+
+// ⭐ Clean-View für pontos
+   if (name.toLowerCase() === "pontos") {
+        resetPlayerArea();
+        stopVideo();
+        const playerArea = document.getElementById("playerArea");
+        playerArea.innerHTML = `
+            <iframe
+                src="https://pontostv.com/live-tv/"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+            ></iframe>
+            <div id="status">Pontos TV(Clean-View)</div>
+        `;
+        return;
+    }
 
 
 
