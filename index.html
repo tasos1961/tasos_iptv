@@ -314,6 +314,24 @@ if (name.toLowerCase() === "megaweb") {
     return;
 }
 
+// ⭐ Clean‑View für EuroGR
+if (name.toLowerCase() === "eurogr") {
+    resetPlayerArea();
+    stopVideo();
+
+    const playerArea = document.getElementById("playerArea");
+    playerArea.innerHTML = `
+        <iframe
+            src="https://gr.euronews.com/live"
+            style="width:100%;height:100%;border:none;background:#000;"
+            sandbox="allow-scripts allow-same-origin allow-popups"
+        ></iframe>
+        <div id="status">EuroGR Live (Clean‑View)</div>
+    `;
+    return;
+}
+
+
    // andere Web-Kanäle → neuer Tab (ohne Proxy)
 if (webOnlyChannels[name]) {
     resetPlayerArea();
