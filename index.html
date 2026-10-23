@@ -83,7 +83,28 @@ body {
 <div id="playerArea">
     <video id="video" controls autoplay playsinline></video>
     <div id="status">Status: initialisiert</div>
-</div>
+    
+<button id="backButton" style="
+    display:none;
+    position:absolute;
+    top:15px;
+    left:15px;
+    z-index:9999;
+    padding:10px 18px;
+    background:rgba(0,0,0,0.6);
+    color:#fff;
+    border:none;
+    border-radius:50px;
+    font-size:16px;
+    font-weight:500;
+    box-shadow:0 2px 6px rgba(0,0,0,0.3);
+    backdrop-filter:blur(4px);
+    cursor:pointer;
+">
+    ⬅ Zurück
+</button>
+
+
 
 <script>
 // 🔥 Dein stabiler Vercel‑Proxy
@@ -301,21 +322,33 @@ if (name.toLowerCase() === "megaweb") {
         return;
     }
 
+const backButton = document.getElementById("backButton");
 
+backButton.onclick = () => {
+    backButton.style.opacity = "0";
+    setTimeout(() => {
+        window.location.href = "index.html";
+    }, 200);
+};
 
-
-
-
+// Wenn du einen Web-Kanal öffnest:
 if (webOnlyChannels[name]) {
     resetPlayerArea();
     stopVideo();
 
-    // Seite direkt im selben Fenster öffnen (kein neuer Tab!)
-    window.location.href = webOnlyChannels[name];
+    backButton.style.display = "block";
+    backButton.style.opacity = "1";
 
+    window.location.href = webOnlyChannels[name];
     setStatus("Web-Kanal geöffnet: " + ch.name);
     return;
 }
+
+// Wenn du zurück zur Hauptseite gehst:
+function resetPlayerArea() {
+    backButton.style.display = "none";
+}
+
 
 
 // Normale Streams (HLS)
