@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Zugriff geschützt</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #111; color: white; margin: 0; }
+        .box { text-align: center; padding: 30px; border: 1px solid #333; border-radius: 8px; background: #161616; width: 300px; }
+        input { padding: 10px; border: 1px solid #444; background: #222; color: white; border-radius: 4px; width: 90%; margin-bottom: 15px; box-sizing: border-box; }
+        button { padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { background: #0062d2; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Playlist Login</h2>
+        <input type="text" id="username" placeholder="Dein Name">
+        <input type="password" id="pw" placeholder="Dein Passwort">
+        <button onclick="checkLogin()">Einloggen</button>
+    </div>
+
+    <script>
+        // Deine festgelegten Benutzerdaten (Alle Namen komplett kleingeschrieben)
+        const ERLAUBTE_NUTZER = {
+            "user1": "6543",
+            "user2": "6543",
+            "user3": "6543"
+        };
+
+        function checkLogin() {
+            try {
+                const nameInput = document.getElementById('username').value.trim().toLowerCase();
+                const passwordInput = document.getElementById('pw').value.trim();
+
+                // Falls Felder leer sind
+                if (!nameInput || !passwordInput) {
+                    alert("Bitte gib sowohl deinen Namen als auch dein Passwort ein!");
+                    return;
+                }
+
+                // Prüfen, ob Name existiert und das Passwort übereinstimmt
+                if (ERLAUBTE_NUTZER[nameInput] && ERLAUBTE_NUTZER[nameInput] === passwordInput) {
+                    
+                    // 1. Cookie setzen (Wir nutzen SameSite=Lax für maximale Browser-Kompatibilität beim ersten Laden)
+                    document.cookie = "authorized_user=true; path=/; max-age=604800; SameSite=Lax; Secure";
+                    
+                    // 2. Sicherheitsprüfung: Hat der Browser das Cookie akzeptiert?
+                    if (!document.cookie.includes("authorized_user=true")) {
+                        alert("Fehler: Dein Browser blockiert Cookies. Bitte erlaube Cookies für diese Website, um dich einzuloggen.");
+                        return;
+                    }
+
+                    // 3. Wenn alles passt -> Harter Reload zur Hauptseite via Vercel-Routing
+                    window.location.href = window.location.origin + "/"; 
+                } else {
+                    alert("Name oder Passwort ist falsch!");
+                }
+            } catch (error) {
+                alert("Ein unerwarteter Fehler ist aufgetreten: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
