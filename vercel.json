@@ -3,28 +3,24 @@
   "rewrites": [
     {
       "source": "/",
-      "has": [
+      "missing": [
         {
           "type": "cookie",
           "key": "authorized_user",
           "value": "true"
         }
       ],
-      "destination": "/app.html"
+      "destination": "/login.html"
     },
     {
       "source": "/api/proxy",
-      "has": [
+      "missing": [
         {
           "type": "cookie",
           "key": "authorized_user",
           "value": "true"
         }
       ],
-      "destination": "/api/proxy"
-    },
-    {
-      "source": "/api/proxy",
       "destination": "/404"
     }
   ]
