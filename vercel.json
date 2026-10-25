@@ -11,6 +11,21 @@
         }
       ],
       "destination": "/app.html"
+    },
+    {
+      "source": "/api/proxy",
+      "has": [
+        {
+          "type": "cookie",
+          "key": "authorized_user",
+          "value": "true"
+        }
+      ],
+      "destination": "/api/proxy"
+    },
+    {
+      "source": "/api/proxy",
+      "destination": "/404"
     }
   ]
 }
