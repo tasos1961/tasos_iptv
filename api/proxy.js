@@ -1,4 +1,10 @@
 export default async function handler(req, res) {
+    // 🔒 NEU: Sicherheitsschranke – Prüfen, ob der Nutzer eingeloggt ist (Cookie-Check)
+    const cookies = req.headers.cookie || '';
+    if (!cookies.includes('authorized_user=true')) {
+        return res.status(403).send("Zugriff verweigert. Bitte zuerst einloggen!");
+    }
+
     const target = req.query.url;
 
     if (!target) {
