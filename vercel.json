@@ -1,6 +1,6 @@
 {
   "cleanUrls": true,
-  "rewrites": [
+  "redirects": [
     {
       "source": "/",
       "missing": [
@@ -10,8 +10,23 @@
           "value": "true"
         }
       ],
-      "destination": "/login.html"
+      "destination": "/login",
+      "permanent": false
     },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "cookie",
+          "key": "authorized_user",
+          "value": "true"
+        }
+      ],
+      "destination": "/app",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
     {
       "source": "/api/proxy",
       "missing": [
