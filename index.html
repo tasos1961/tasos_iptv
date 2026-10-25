@@ -240,14 +240,38 @@ function handleChannel(ch, index) {
         return;
     }
 
-    if (name === "skai sport") {
+    if (name === "skai tv1") {
         resetPlayerArea();
         stopVideo();
         document.getElementById("playerArea").innerHTML = `
-            <iframe src="https://www.sportfmtv.gr/el"
+            <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-1"
                 style="width:100%;height:100%;border:none;background:#000;"
                 sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">SKAI Sport Live (Clean-View)</div>
+            <div id="status">SKAI TV1 (Clean-View)</div>
+        `;
+        return;
+    }
+
+        if (name === "skai tv2") {
+        resetPlayerArea();
+        stopVideo();
+        document.getElementById("playerArea").innerHTML = `
+            <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-2"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">SKAI TV2 (Clean-View)</div>
+        `;
+        return;
+    }
+
+    if (name === "skai tv3") {
+        resetPlayerArea();
+        stopVideo();
+        document.getElementById("playerArea").innerHTML = `
+            <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-3"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">SKAI TV3 (Clean-View)</div>
         `;
         return;
     }
