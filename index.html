@@ -1,332 +1,48 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Tasos IPTV</title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-<style>
-body {
-    margin: 0;
-    background: #000;
-    color: #fff;
-    font-family: Arial, sans-serif;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-}
-
-#list {
-    width: 15%;
-    height: 100vh;
-    background: #111;
-    padding: 6px;
-    overflow-y: auto;
-    position: fixed;
-    left: 0;
-    top: 0;
-}
-
-#playerArea {
-    position: fixed;
-    right: 0;
-    top: 0;
-    width: 85%;
-    height: 100vh;
-    background: #000;
-}
-
-#video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.channel {
-    padding: 18px;
-    font-size: 22px;
-    border-bottom: 1px solid #333;
-    cursor: pointer;
-}
-
-.channel.active {
-    background: #2a5f2a;
-    font-weight: bold;
-}
-
-#status {
-    position: absolute;
-    left: 15px;
-    bottom: 15px;
-    z-index: 9999;
-    background: rgba(0, 0, 0, 0.72);
-    color: #fff;
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    max-width: 75%;
-    line-height: 1.5;
-    white-space: pre-wrap;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Zugriff geschützt</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #111; color: white; margin: 0; }
+        .box { text-align: center; padding: 30px; border: 1px solid #333; border-radius: 8px; background: #161616; width: 300px; }
+        input { padding: 10px; border: 1px solid #444; background: #222; color: white; border-radius: 4px; width: 90%; margin-bottom: 15px; box-sizing: border-box; }
+        button { padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { background: #0062d2; }
+    </style>
 </head>
-
 <body>
+    <div class="box">
+        <h2>Playlist Login</h2>
+        <input type="text" id="username" placeholder="Dein Name">
+        <input type="password" id="pw" placeholder="Dein Passwort">
+        <button onclick="checkLogin()">Einloggen</button>
+    </div>
 
-<div id="list"></div>
+    <script>
+        // HIER kannst du für jeden Nutzer ein eigenes Passwort festlegen:
+        const ERLAUBTE_NUTZER = {
+            "user1": "6543",
+            "user2": "6543",
+            "user3": "6543"
+        };
 
-<div id="playerArea">
-    <video id="video" controls autoplay playsinline></video>
-    <div id="status">Status: initialisiert</div>
-</div>
+        function checkLogin() {
+            const nameInput = document.getElementById('username').value.trim().toLowerCase();
+            const passwordInput = document.getElementById('pw').value.trim();
 
-<script>
-// Proxy
-const proxy = "https://tasosiptv.vercel.app/api/proxy?url=";
-
-// Playlist
-const playlistURL =
-    "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
-
-let channels = [];
-let hls = null;
-
-// Web‑Kanäle → öffnen im neuen Tab
-const webOnlyChannels = {
-    // "eurogr": "https://gr.euronews.com/live",   ← AUSGEBLENDET
-    "91nrg": "https://nrg91.gr/tv/"
-};
-
-function setStatus(msg) {
-    document.getElementById("status").textContent = msg;
-}
-
-function stopVideo() {
-    const video = document.getElementById("video");
-    try { video.pause(); } catch(e) {}
-    video.src = "";
-    if (hls) { try { hls.destroy(); } catch(e) {} hls = null; }
-}
-
-function resetPlayerArea() {
-    const playerArea = document.getElementById("playerArea");
-    playerArea.innerHTML = `
-        <video id="video" controls autoplay playsinline></video>
-        <div id="status">Status: initialisiert</div>
-    `;
-}
-
-function loadPlaylist() {
-    setStatus("Playlist wird geladen...");
-    fetch(playlistURL)
-        .then(r => r.text())
-        .then(parseM3U)
-        .catch(err => {
-            console.error(err);
-            setStatus("Fehler beim Laden der Playlist.");
-        });
-}
-
-function parseM3U(data) {
-    const lines = data.split(/\r?\n/);
-    let name = "";
-
-    channels = [];
-
-    lines.forEach(line => {
-        line = line.trim();
-        if (line.startsWith("#EXTINF")) {
-            const parts = line.split(",");
-            name = parts[1]?.trim() || "Unbenannt";
-        } else if (line.startsWith("http")) {
-            const isHLS = line.endsWith(".m3u8");
-
-            channels.push({
-                name,
-                url: isHLS
-                    ? line
-                    : proxy + encodeURIComponent(line)
-            });
+            // Prüfen, ob Name und Passwort zusammenpassen
+            if (ERLAUBTE_NUTZER[nameInput] && ERLAUBTE_NUTZER[nameInput] === passwordInput) {
+                
+                // Passwort stimmt! Wir setzen das Vercel-Freischalt-Cookie (Gültig für 7 Tage)
+                document.cookie = "authorized_user=true; path=/; max-age=604800; SameSite=Strict; Secure";
+                
+                // Seite neu laden, um die echte "app.html" anzuzeigen
+                window.location.reload(); 
+            } else {
+                alert("Name oder Passwort ist falsch!");
+            }
         }
-    });
-
-    renderList();
-    playChannel(0);
-}
-
-function renderList() {
-    const list = document.getElementById("list");
-    list.innerHTML = "";
-
-    channels.forEach((ch, i) => {
-        const div = document.createElement("div");
-        div.textContent = ch.name;
-        div.className = "channel";
-        div.onclick = () => handleChannel(ch, i);
-        list.appendChild(div);
-    });
-}
-
-function handleChannel(ch, index) {
-    const name = ch.name.toLowerCase();
-
-    // Clean‑Views
-    if (name === "skaiweb") {
-        resetPlayerArea();
-        stopVideo();
-        document.getElementById("playerArea").innerHTML = `
-            <iframe src="https://www.skai.gr/tv/live/"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">Skai Live (Clean-View)</div>
-        `;
-        return;
-    }
-
-    if (name === "ant1web") {
-        resetPlayerArea();
-        stopVideo();
-        document.getElementById("playerArea").innerHTML = `
-            <iframe src="https://www.antenna.gr/live"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">ANT1 Live (Clean-View)</div>
-        `;
-        return;
-    }
-
-    if (name.toLowerCase() === "megaweb") {
-    resetPlayerArea();
-    stopVideo();
-
-    const playerArea = document.getElementById("playerArea");
-    playerArea.innerHTML = `
-        <iframe
-            src="https://www.megatv.com/live"
-            style="width:100%;height:100%;border:none;background:#000;margin-top:-60px;"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-        ></iframe>
-        <div id="status">Mega TV Live (Clean-View)</div>
-    `;
-    return;
-}
-
-
-
-
-    if (name === "makweb") {
-        resetPlayerArea();
-        stopVideo();
-        document.getElementById("playerArea").innerHTML = `
-            <iframe src="https://www.antenna.gr/livemak"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">Makedonia TV Live (Clean-View)</div>
-        `;
-        return;
-    }
-
-    if (name === "alphaweb") {
-        resetPlayerArea();
-        stopVideo();
-        document.getElementById("playerArea").innerHTML = `
-            <iframe src="${proxy + encodeURIComponent('https://www.alphatv.gr/live')}"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">Alpha TV Live (Clean-View)</div>
-        `;
-        return;
-    }
-
-    if (name === "skai sp1") {
-        resetPlayerArea();
-        stopVideo();
-        document.getElementById("playerArea").innerHTML = `
-            <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-1"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">SKAI TV1 (Clean-View)</div>
-        `;
-        return;
-    }
-
-        if (name === "skai sp2") {
-        resetPlayerArea();
-        stopVideo();
-        document.getElementById("playerArea").innerHTML = `
-            <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-2"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">SKAI TV2 (Clean-View)</div>
-        `;
-        return;
-    }
-
-    if (name === "skai sp3") {
-        resetPlayerArea();
-        stopVideo();
-        document.getElementById("playerArea").innerHTML = `
-            <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-3"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">SKAI TV3 (Clean-View)</div>
-        `;
-        return;
-    }
-
-    if (name === "pontos") {
-        resetPlayerArea();
-        stopVideo();
-        document.getElementById("playerArea").innerHTML = `
-            <iframe src="https://pontostv.com/live-tv/"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">Pontos TV (Clean-View)</div>
-        `;
-        return;
-    }
-
-    // Web‑Kanäle → neues Tab
-    if (webOnlyChannels[name]) {
-        resetPlayerArea();
-        stopVideo();
-        window.open(webOnlyChannels[name], "_blank");
-        setStatus("Web-Kanal geöffnet: " + ch.name);
-        return;
-    }
-
-    // Normale Streams
-    resetPlayerArea();
-    playChannel(index);
-}
-
-function playChannel(index) {
-    const ch = channels[index];
-    playStream(ch.url, ch.name);
-}
-
-function playStream(url, name) {
-    const video = document.getElementById("video");
-
-    if (hls) { hls.destroy(); hls = null; }
-
-    setStatus("Starte Stream: " + name);
-
-    if (Hls.isSupported()) {
-        hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-    } else {
-        video.src = url;
-        video.play();
-    }
-}
-
-loadPlaylist();
-</script>
-
+    </script>
 </body>
 </html>
