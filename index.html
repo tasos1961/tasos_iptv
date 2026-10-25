@@ -20,29 +20,45 @@
     </div>
 
     <script>
-        // HIER kannst du für jeden Nutzer ein eigenes Passwort festlegen:
+        // Deine festgelegten Benutzerdaten (Alle Namen komplett kleingeschrieben)
         const ERLAUBTE_NUTZER = {
             "user1": "6543",
             "user2": "6543",
             "user3": "6543"
         };
 
-    function checkLogin() {
-    const nameInput = document.getElementById('username').value.trim().toLowerCase();
-    const passwordInput = document.getElementById('pw').value.trim();
+        function checkLogin() {
+            try {
+                const nameInput = document.getElementById('username').value.trim().toLowerCase();
+                const passwordInput = document.getElementById('pw').value.trim();
 
-    if (ERLAUBTE_NUTZER[nameInput] && ERLAUBTE_NUTZER[nameInput] === passwordInput) {
-        
-        // Cookie setzen
-        document.cookie = "authorized_user=true; path=/; max-age=604800; SameSite=Strict; Secure";
-        
-        // Zwinge den Browser, die Hauptseite komplett neu vom Server abzurufen
-        window.location.href = window.location.origin + "/"; 
-    } else {
-        alert("Name oder Passwort ist falsch!");
-    }
-}
+                // Falls Felder leer sind
+                if (!nameInput || !passwordInput) {
+                    alert("Bitte gib sowohl deinen Namen als auch dein Passwort ein!");
+                    return;
+                }
 
+                // Prüfen, ob Name existiert und das Passwort übereinstimmt
+                if (ERLAUBTE_NUTZER[nameInput] && ERLAUBTE_NUTZER[nameInput] === passwordInput) {
+                    
+                    // 1. Cookie setzen (Wir nutzen SameSite=Lax für maximale Browser-Kompatibilität beim ersten Laden)
+                    document.cookie = "authorized_user=true; path=/; max-age=604800; SameSite=Lax; Secure";
+                    
+                    // 2. Sicherheitsprüfung: Hat der Browser das Cookie akzeptiert?
+                    if (!document.cookie.includes("authorized_user=true")) {
+                        alert("Fehler: Dein Browser blockiert Cookies. Bitte erlaube Cookies für diese Website, um dich einzuloggen.");
+                        return;
+                    }
+
+                    // 3. Wenn alles passt -> Harter Reload zur Hauptseite via Vercel-Routing
+                    window.location.href = window.location.origin + "/"; 
+                } else {
+                    alert("Name oder Passwort ist falsch!");
+                }
+            } catch (error) {
+                alert("Ein unerwarteter Fehler ist aufgetreten: " + error.message);
+            }
+        }
     </script>
 </body>
 </html>
