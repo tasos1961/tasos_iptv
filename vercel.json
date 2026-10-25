@@ -1,0 +1,16 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "cookie",
+          "key": "authorized_user",
+          "value": "true"
+        }
+      ],
+      "destination": "/app.html"
+    }
+  ]
+}
