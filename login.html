@@ -51,7 +51,9 @@
                     }
 
                     // 3. Wenn alles passt -> Harter Reload zur Hauptseite via Vercel-Routing
-                    window.location.href = window.location.origin + "/"; 
+                    // Ändere diese Zeile in deiner login.html um:
+                    window.location.href = "/";
+
                 } else {
                     alert("Name oder Passwort ist falsch!");
                 }
