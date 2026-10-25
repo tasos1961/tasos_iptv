@@ -24,6 +24,18 @@
       ],
       "destination": "/app",
       "permanent": false
+    },
+    {
+      "source": "/app",
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "authorized_user",
+          "value": "true"
+        }
+      ],
+      "destination": "/login",
+      "permanent": false
     }
   ],
   "rewrites": [
