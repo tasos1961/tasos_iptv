@@ -173,19 +173,24 @@ function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
 
      // Clean‑Views
-     if (name === "skaiweb") {
-        resetPlayerArea();
-        stopVideo();
-        document.getElementById("playerArea").innerHTML = `
-            <iframe src="${proxy + encodeURIComponent('https://www.skai.gr/tv/live/')}"
-                style="width:100%;height:100%;border:none;background:#000;"
-                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-            <div id="status">Skai Live (Clean-View)</div>
-        `;
-        return;
+  if (name.toLowerCase() === "skaiweb") {
+  const target = "https://www.skai.gr/tv/live/";
+  const response = await fetch(target, {
+    headers: {
+      "Referer": "https://www.skai.gr/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+      "Origin": "https://www.skai.gr"
     }
+  });
+  const html = await response.text();
+  return new Response(html, {
+    headers: { "Access-Control-Allow-Origin": "*" }
+  });
+}
 
-    if (name === "ant1web") {
+
+    if (name.toLowerCase() === "ant1web") {
+    skaiweb
         resetPlayerArea();
         stopVideo();
         document.getElementById("playerArea").innerHTML = `
