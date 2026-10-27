@@ -172,7 +172,7 @@ function renderList() {
 function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
 
-     // Clean‑Views
+     // Clean‑Views skaiweb
   if (name.toLowerCase() === "skaiweb") {
   const target = "https://www.skai.gr/tv/live/";
   const response = await fetch(target, {
@@ -190,8 +190,7 @@ function handleChannel(ch, index) {
 
 
     if (name.toLowerCase() === "ant1web") {
-    skaiweb
-        resetPlayerArea();
+          resetPlayerArea();
         stopVideo();
         document.getElementById("playerArea").innerHTML = `
             <iframe src="https://www.antenna.gr/live"
