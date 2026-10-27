@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-
     // 🔒 Login‑Check
     const cookies = req.headers.cookie || '';
     if (!cookies.includes('authorized_user=true')) {
@@ -11,7 +10,7 @@ export default async function handler(req, res) {
         return res.status(400).send("Missing ?url=");
     }
 
-    // ⭐ Standard‑Header
+    // 🧩 Standard‑Header
     let headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:117.0) Gecko/20100101 Firefox/117.0",
         "Accept": "*/*",
@@ -22,11 +21,12 @@ export default async function handler(req, res) {
         "Origin": ""
     };
 
-    // ⭐ SPEZIAL: SkaiWeb braucht echten Referer + Origin
+    // 🧩 Spezial‑Header für Skai‑Domains
     const isSkai =
         target.includes("skai.gr") ||
-        target.includes("skai") ||
-        target.includes("Skai");
+        target.includes("player.skai.gr") ||
+        target.includes("cdn.skai.gr") ||
+        target.includes("akamaized.net");
 
     if (isSkai) {
         headers = {
@@ -45,23 +45,23 @@ export default async function handler(req, res) {
         const contentType = response.headers.get("content-type") || "application/octet-stream";
         res.setHeader("Content-Type", contentType);
 
-        // ⭐ CORS + Frame‑Erlaubnis
+        // 🧩 CORS‑Freigabe und Frame‑Erlaubnis
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Access-Control-Allow-Headers", "*");
         res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,POST,OPTIONS");
         res.setHeader("X-Frame-Options", "ALLOWALL");
         res.setHeader("Content-Security-Policy", "frame-ancestors *");
 
-        // ⭐ Nicht‑HTML → direkt weiterleiten (m3u8, ts, jpg, js, css)
+        // 🧩 Nicht‑HTML → direkt weiterleiten (z. B. .m3u8, .ts, .jpg)
         if (!contentType.includes("text/html")) {
             const buffer = Buffer.from(await response.arrayBuffer());
             return res.send(buffer);
         }
 
-        // ⭐ HTML laden
+        // 🧩 HTML laden
         let html = await response.text();
 
-        // ⭐ MegaWeb‑Optimierung (unverändert)
+        // 🧩 MegaWeb‑Optimierung
         const isMegaWeb =
             target.includes("megatv.com") ||
             target.includes("mega") ||
@@ -75,9 +75,17 @@ export default async function handler(req, res) {
             html = html.replace(/<div class="player-container"/i, '<div class="player-container" style="margin-top:-20px;"');
         }
 
-        // ⭐ SkaiWeb → KEINE HTML‑Änderungen
-        // (nur Header‑Manipulation oben)
+        // 🧩 SkaiWeb – automatische Umschreibung eingebetteter Ressourcen
+        if (isSkai) {
+            html = html.replace(/src="https:\/\/(.*?)"/g, (match, p1) => {
+                return `src="/api/proxy?url=https://${p1}"`;
+            });
+            html = html.replace(/href="https:\/\/(.*?)"/g, (match, p1) => {
+                return `href="/api/proxy?url=https://${p1}"`;
+            });
+        }
 
+        // 🧩 Optimierte HTML zurückgeben
         res.send(html);
 
     } catch (err) {
