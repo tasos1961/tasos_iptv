@@ -2,9 +2,8 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tasos IPTV</title>
-<script src="https://jsdelivr.net"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
 body {
@@ -26,13 +25,6 @@ body {
     position: fixed;
     left: 0;
     top: 0;
-    transition: transform 0.3s ease; /* Weiches Einklappen des Menüs */
-    z-index: 10;
-}
-
-/* Schiebt die Senderliste elegant nach links aus dem Sichtfeld */
-body.fullscreen #list {
-    transform: translateX(-100%);
 }
 
 #playerArea {
@@ -42,42 +34,14 @@ body.fullscreen #list {
     width: 85%;
     height: 100vh;
     background: #000;
-    transition: width 0.3s ease, left 0.3s ease; /* Passt die Größe flüssig an */
 }
 
-/* Erweitert den Videoplayer auf die vollen 100% des Bildschirms */
-body.fullscreen #playerArea {
-    width: 100%;
-    left: 0;
-}
-
-#video, iframe {
+#video {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    border: none;
-}
-
-/* Design des Vollbild-Umschalters oben rechts */
-#fullscreenBtn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    z-index: 99999;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    border: 1px solid #444;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-}
-#fullscreenBtn:hover {
-    background: #0070f3;
-    border-color: #0070f3;
 }
 
 .channel {
@@ -111,33 +75,29 @@ body.fullscreen #playerArea {
 
 <body>
 
-<!-- Linke Seitenleiste für die Senderauswahl -->
 <div id="list"></div>
 
-<!-- Rechter Hauptbereich für das TV-Bild -->
 <div id="playerArea">
-    <button id="fullscreenBtn" onclick="toggleFullscreen()">📺 Vollbild Ein/Aus</button>
     <video id="video" controls autoplay playsinline></video>
     <div id="status">Status: initialisiert</div>
 </div>
 
 <script>
-// Proxy-Pfad für Streams
-const proxy = "/api/proxy?url=";
+// Proxy
+const proxy = "https://tasosiptv.vercel.app/api/proxy?url=";
 
-// Sicherheits-RAM-Speicher: Verhindert Datendiebstahl über textContent
-let roheM3UZeilen = [];
-let kanalIndexListe = []; 
+// Playlist
+const playlistURL =
+    "https://gist.githubusercontent.com/tasos1961/ded73b64497f7a01f672962072d0a7ee/raw/BGREEK_TV.m3u";
+
+let channels = [];
 let hls = null;
 
+// Web‑Kanäle → öffnen im neuen Tab
 const webOnlyChannels = {
-    "91nrg": "https://nrg91.gr"
+    // "eurogr": "https://gr.euronews.com/live",   ← AUSGEBLENDET
+    "91nrg": "https://nrg91.gr/tv/"
 };
-
-// Wechselt zwischen normaler Ansicht und vollem Bildschirm
-function toggleFullscreen() {
-    document.body.classList.toggle("fullscreen");
-}
 
 function setStatus(msg) {
     document.getElementById("status").textContent = msg;
@@ -146,146 +106,191 @@ function setStatus(msg) {
 function stopVideo() {
     const video = document.getElementById("video");
     try { video.pause(); } catch(e) {}
-    if (video) video.src = "";
+    video.src = "";
     if (hls) { try { hls.destroy(); } catch(e) {} hls = null; }
 }
 
 function resetPlayerArea() {
     const playerArea = document.getElementById("playerArea");
     playerArea.innerHTML = `
-        <button id="fullscreenBtn" onclick="toggleFullscreen()">📺 Vollbild Ein/Aus</button>
         <video id="video" controls autoplay playsinline></video>
         <div id="status">Status: initialisiert</div>
     `;
 }
 
-// Holt deine Playlist geschützt über die unsichtbare Vercel-API ab
 function loadPlaylist() {
     setStatus("Playlist wird geladen...");
-    fetch("/api/proxy")
+    fetch(playlistURL)
         .then(r => r.text())
-        .then(daten => {
-            roheM3UZeilen = daten.split(/\r?\n/);
-            baueKanalListe();
-        })
+        .then(parseM3U)
         .catch(err => {
             console.error(err);
             setStatus("Fehler beim Laden der Playlist.");
         });
 }
 
-// Erstellt die Kanäle für die Seitenleiste, lässt die URLs aber ungeladen im Hintergrund
-function baueKanalListe() {
-    kanalIndexListe = [];
-    let aktuellerName = "";
+function parseM3U(data) {
+    const lines = data.split(/\r?\n/);
+    let name = "";
 
-    roheM3UZeilen.forEach((zeile, index) => {
-        const getrimmteZeile = zeile.trim();
-        if (getrimmteZeile.startsWith("#EXTINF")) {
-            const parts = getrimmteZeile.split(",");
-            aktuellerName = parts[1]?.trim() || "Unbenannt";
-        } else if (getrimmteZeile.startsWith("http")) {
-            kanalIndexListe.push({
-                name: aktuellerName,
-                zeilenNummer: index
+    channels = [];
+
+    lines.forEach(line => {
+        line = line.trim();
+        if (line.startsWith("#EXTINF")) {
+            const parts = line.split(",");
+            name = parts[1]?.trim() || "Unbenannt";
+        } else if (line.startsWith("http")) {
+            const isHLS = line.endsWith(".m3u8");
+
+            channels.push({
+                name,
+                url: isHLS
+                    ? line
+                    : proxy + encodeURIComponent(line)
             });
         }
     });
 
     renderList();
-    
-    // FERTIGE KORREKTUR: Holt exakt das erste Element aus der Liste, anstatt das Gesamt-Array abzustürzen
-    if (kanalIndexListe.length > 0) {
-        handleChannel(kanalIndexListe[0], 0); 
-    }
+    playChannel(0);
 }
 
 function renderList() {
     const list = document.getElementById("list");
     list.innerHTML = "";
 
-    kanalIndexListe.forEach((ch, i) => {
+    channels.forEach((ch, i) => {
         const div = document.createElement("div");
         div.textContent = ch.name;
         div.className = "channel";
-        if (i === 0) div.classList.add("active");
-        div.onclick = () => {
-            document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
-            div.classList.add('active');
-            handleChannel(ch, i);
-        };
+        div.onclick = () => handleChannel(ch, i);
         list.appendChild(div);
     });
-}
-
-// Berechnet die Stream-URL erst genau in der Millisekunde des Aufrufs flüchtig im RAM
-function extrahiereKanalUrl(index) {
-    const kanalInfo = kanalIndexListe[index];
-    if (!kanalInfo) return "";
-    
-    const echteUrl = roheM3UZeilen[kanalInfo.zeilenNummer].trim();
-    return echteUrl.endsWith(".m3u8") ? echteUrl : proxy + encodeURIComponent(echteUrl);
 }
 
 function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
 
-    // Erzeugt iFrame-Fenster mit funktionierendem Umschalt-Knopf
-    const setIframeView = (srcUrl, statusText, extraStyle = "") => {
+     // Clean‑Views skaiweb
+  if (name.toLowerCase() === "skaiweb") {
+    resetPlayerArea();
+    stopVideo();
+    document.getElementById("playerArea").innerHTML = `
+            <iframe src="https://www.skai.gr/tv/live/"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">Skai Live (Clean-View)</div>
+        `;
+        return;
+  }
+
+
+
+    if (name.toLowerCase() === "ant1web") {
+          resetPlayerArea();
+        stopVideo();
+        document.getElementById("playerArea").innerHTML = `
+            <iframe src="https://www.antenna.gr/live"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">ANT1 Live (Clean-View)</div>
+        `;
+        return;
+    }
+
+    if (name.toLowerCase() === "megaweb") {
+    resetPlayerArea();
+    stopVideo();
+
+    const playerArea = document.getElementById("playerArea");
+    playerArea.innerHTML = `
+        <iframe
+            src="https://www.megatv.com/live"
+            style="width:100%;height:100%;border:none;background:#000;margin-top:-60px;"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        ></iframe>
+        <div id="status">Mega TV Live (Clean-View)</div>
+    `;
+    return;
+}
+
+
+
+
+    if (name === "makweb") {
         resetPlayerArea();
         stopVideo();
         document.getElementById("playerArea").innerHTML = `
-            <button id="fullscreenBtn" onclick="toggleFullscreen()">📺 Vollbild Ein/Aus</button>
-            <iframe src="${srcUrl}" style="width:100%;height:100%;border:none;background:#000;${extraStyle}" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
-            <div id="status">${statusText}</div>
+            <iframe src="https://www.antenna.gr/livemak"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">Makedonia TV Live (Clean-View)</div>
         `;
-    };
-
-    if (name === "skaiweb") {
-        setIframeView("https://skai.gr", "Skai Live (Clean-View)");
-        return;
-    }
-
-    if (name === "ant1web") {
-        setIframeView("https://antenna.gr", "ANT1 Live (Clean-View)");
-        return;
-    }
-
-    if (name === "megaweb") {
-        setIframeView("https://megatv.com", "Mega TV Live (Clean-View)", "margin-top:-60px;");
-        return;
-    }
-
-    if (name === "makweb") {
-        setIframeView("https://antenna.grmak", "Makedonia TV Live (Clean-View)");
         return;
     }
 
     if (name === "alphaweb") {
-        setIframeView(proxy + encodeURIComponent('https://alphatv.gr'), "Alpha TV Live (Clean-View)");
+        resetPlayerArea();
+        stopVideo();
+        document.getElementById("playerArea").innerHTML = `
+            <iframe src="${proxy + encodeURIComponent('https://www.alphatv.gr/live')}"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">Alpha TV Live (Clean-View)</div>
+        `;
         return;
     }
 
     if (name === "skai sp1") {
-        setIframeView("https://sportfmtv.gr", "SKAI TV1 (Clean-View)");
+        resetPlayerArea();
+        stopVideo();
+        document.getElementById("playerArea").innerHTML = `
+            <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-1"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">SKAI TV1 (Clean-View)</div>
+        `;
         return;
     }
 
-    if (name === "skai sp2") {
-        setIframeView("https://sportfmtv.gr", "SKAI TV2 (Clean-View)");
+        if (name === "skai sp2") {
+        resetPlayerArea();
+        stopVideo();
+        document.getElementById("playerArea").innerHTML = `
+            <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-2"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">SKAI TV2 (Clean-View)</div>
+        `;
         return;
     }
 
     if (name === "skai sp3") {
-        setIframeView("https://sportfmtv.gr", "SKAI TV3 (Clean-View)");
+        resetPlayerArea();
+        stopVideo();
+        document.getElementById("playerArea").innerHTML = `
+            <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-3"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">SKAI TV3 (Clean-View)</div>
+        `;
         return;
     }
 
     if (name === "pontos") {
-        setIframeView("https://pontostv.com", "Pontos TV (Clean-View)");
+        resetPlayerArea();
+        stopVideo();
+        document.getElementById("playerArea").innerHTML = `
+            <iframe src="https://pontostv.com/live-tv/"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">Pontos TV (Clean-View)</div>
+        `;
         return;
     }
 
+    // Web‑Kanäle → neues Tab
     if (webOnlyChannels[name]) {
         resetPlayerArea();
         stopVideo();
@@ -294,21 +299,19 @@ function handleChannel(ch, index) {
         return;
     }
 
-    // Standard-HLS-Kanäle über den HTML5-Player laden
+    // Normale Streams
     resetPlayerArea();
     playChannel(index);
 }
 
 function playChannel(index) {
-    const ch = kanalIndexListe[index];
-    if (ch) {
-        const berechneteUrl = extrahiereKanalUrl(index);
-        playStream(berechneteUrl, ch.name);
-    }
+    const ch = channels[index];
+    playStream(ch.url, ch.name);
 }
 
 function playStream(url, name) {
     const video = document.getElementById("video");
+
     if (hls) { hls.destroy(); hls = null; }
 
     setStatus("Starte Stream: " + name);
@@ -317,12 +320,13 @@ function playStream(url, name) {
         hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
-    } else if (video && video.canPlayType('application/vnd.apple.mpegurl')) {
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+    } else {
         video.src = url;
+        video.play();
     }
 }
 
-// Startet den Abruf automatisch
 loadPlaylist();
 </script>
 
