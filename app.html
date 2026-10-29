@@ -2,8 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tasos IPTV</title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://jsdelivr.net"></script>
 
 <style>
 body {
@@ -25,11 +26,11 @@ body {
     position: fixed;
     left: 0;
     top: 0;
-    transition: transform 0.3s ease; /* Weicher Übergang beim Verstecken */
+    transition: transform 0.3s ease; /* Ermöglicht das sanfte Ausblenden */
     z-index: 10;
 }
 
-/* Diese CSS-Klasse schiebt die Senderliste komplett aus dem Bildschirm */
+/* Schiebt die Senderliste nach links aus dem Bildschirm heraus */
 body.fullscreen #list {
     transform: translateX(-100%);
 }
@@ -41,10 +42,10 @@ body.fullscreen #list {
     width: 85%;
     height: 100vh;
     background: #000;
-    transition: width 0.3s ease, left 0.3s ease;
+    transition: width 0.3s ease, left 0.3s ease; /* Macht die Breitenänderung flüssig */
 }
 
-/* Wenn Vollbild aktiv ist, dehnt sich der Player auf die vollen 100% aus */
+/* Wenn Vollbild aktiv ist, dehnt sich das Video über die gesamte Breite aus */
 body.fullscreen #playerArea {
     width: 100%;
     left: 0;
@@ -59,7 +60,7 @@ body.fullscreen #playerArea {
     border: none;
 }
 
-/* Der Vollbild-Knopf oben rechts im Player-Bereich */
+/* Stil für den Vollbild-Knopf oben rechts */
 #fullscreenBtn {
     position: absolute;
     top: 15px;
@@ -110,10 +111,10 @@ body.fullscreen #playerArea {
 
 <body>
 
-<!-- Senderliste -->
+<!-- Die linke Seitenleiste für die Sender -->
 <div id="list"></div>
 
-<!-- Player Bereich mit integriertem Vollbild-Umschalter -->
+<!-- Der Hauptbereich für den Videostream -->
 <div id="playerArea">
     <button id="fullscreenBtn" onclick="toggleFullscreen()">📺 Vollbild Ein/Aus</button>
     <video id="video" controls autoplay playsinline></video>
@@ -121,20 +122,19 @@ body.fullscreen #playerArea {
 </div>
 
 <script>
-// Proxy-Basis
+// Proxy-Basisadresse
 const proxy = "/api/proxy?url=";
 
-// Sicherheits-Änderung: Wir halten nur die rohen Zeilen im RAM.
-// Keine fertigen URLs im Voraus generieren, damit textContent im Browser leer bleibt!
+// Wir halten die Zeilen nur flüchtig im RAM, um die Entwicklertools (textContent) zu leeren
 let roheM3UZeilen = [];
 let kanalIndexListe = []; 
 let hls = null;
 
 const webOnlyChannels = {
-    "91nrg": "https://nrg91.gr/tv/"
+    "91nrg": "https://nrg91.gr"
 };
 
-// Funktion zum Umschalten des Vollbildmodus
+// Schaltet das Menü um (Vollbild ein- oder ausblenden)
 function toggleFullscreen() {
     document.body.classList.toggle("fullscreen");
 }
@@ -152,7 +152,6 @@ function stopVideo() {
 
 function resetPlayerArea() {
     const playerArea = document.getElementById("playerArea");
-    // Wir behalten den Vollbild-Button beim Zurücksetzen bei
     playerArea.innerHTML = `
         <button id="fullscreenBtn" onclick="toggleFullscreen()">📺 Vollbild Ein/Aus</button>
         <video id="video" controls autoplay playsinline></video>
@@ -160,7 +159,7 @@ function resetPlayerArea() {
     `;
 }
 
-// Holt die Playlist sicher über deine unsichtbare API-Route ab
+// Holt den M3U-Text sicher über dein Vercel-Backend ab
 function loadPlaylist() {
     setStatus("Playlist wird geladen...");
     fetch("/api/proxy")
@@ -175,7 +174,7 @@ function loadPlaylist() {
         });
 }
 
-// Filtert nur die Namen heraus, um die Sidebar zu füllen (URLs bleiben versteckt)
+// Baut die Liste in der Sidebar auf, ohne die URLs preiszugeben
 function baueKanalListe() {
     kanalIndexListe = [];
     let aktuellerName = "";
@@ -195,7 +194,8 @@ function baueKanalListe() {
 
     renderList();
     if (kanalIndexListe.length > 0) {
-        playChannel(0); // Startet den ersten Kanal automatisch
+        // Startet den ersten Kanal direkt mit dem korrekten Objekt-Index
+        handleChannel(kanalIndexListe[0], 0); 
     }
 }
 
@@ -209,7 +209,6 @@ function renderList() {
         div.className = "channel";
         if (i === 0) div.classList.add("active");
         div.onclick = () => {
-            // Aktive optische Markierung verschieben
             document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
             div.classList.add('active');
             handleChannel(ch, i);
@@ -218,7 +217,7 @@ function renderList() {
     });
 }
 
-// Extrahiert die URL erst exakt im Moment des Abrufens flüchtig aus dem Speicher
+// Erstellt die endgültige Stream-Adresse erst direkt im Moment des Klicks
 function extrahiereKanalUrl(index) {
     const kanalInfo = kanalIndexListe[index];
     if (!kanalInfo) return "";
@@ -230,7 +229,7 @@ function extrahiereKanalUrl(index) {
 function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
 
-    // Funktion für iFrames, um den Vollbild-Knopf zu erhalten
+    // Hilfsfunktion zur Erzeugung der iFrame-Bereiche mit sichtbarem Vollbild-Knopf
     const setIframeView = (srcUrl, statusText, extraStyle = "") => {
         resetPlayerArea();
         stopVideo();
@@ -242,47 +241,47 @@ function handleChannel(ch, index) {
     };
 
     if (name === "skaiweb") {
-        setIframeView("https://www.skai.gr/tv/live/", "Skai Live (Clean-View)");
+        setIframeView("https://skai.gr", "Skai Live (Clean-View)");
         return;
     }
 
     if (name === "ant1web") {
-        setIframeView("https://www.antenna.gr/live", "ANT1 Live (Clean-View)");
+        setIframeView("https://antenna.gr", "ANT1 Live (Clean-View)");
         return;
     }
 
     if (name === "megaweb") {
-        setIframeView("https://www.megatv.com/live", "Mega TV Live (Clean-View)", "margin-top:-60px;");
+        setIframeView("https://megatv.com", "Mega TV Live (Clean-View)", "margin-top:-60px;");
         return;
     }
 
     if (name === "makweb") {
-        setIframeView("https://www.antenna.gr/livemak", "Makedonia TV Live (Clean-View)");
+        setIframeView("https://antenna.grmak", "Makedonia TV Live (Clean-View)");
         return;
     }
 
     if (name === "alphaweb") {
-        setIframeView(proxy + encodeURIComponent('https://www.alphatv.gr/live'), "Alpha TV Live (Clean-View)");
+        setIframeView(proxy + encodeURIComponent('https://alphatv.gr'), "Alpha TV Live (Clean-View)");
         return;
     }
 
     if (name === "skai sp1") {
-        setIframeView("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-1", "SKAI TV1 (Clean-View)");
+        setIframeView("https://sportfmtv.gr", "SKAI TV1 (Clean-View)");
         return;
     }
 
     if (name === "skai sp2") {
-        setIframeView("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-2", "SKAI TV2 (Clean-View)");
+        setIframeView("https://sportfmtv.gr", "SKAI TV2 (Clean-View)");
         return;
     }
 
     if (name === "skai sp3") {
-        setIframeView("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-3", "SKAI TV3 (Clean-View)");
+        setIframeView("https://sportfmtv.gr", "SKAI TV3 (Clean-View)");
         return;
     }
 
     if (name === "pontos") {
-        setIframeView("https://pontostv.com/live-tv/", "Pontos TV (Clean-View)");
+        setIframeView("https://pontostv.com", "Pontos TV (Clean-View)");
         return;
     }
 
@@ -294,7 +293,7 @@ function handleChannel(ch, index) {
         return;
     }
 
-    // Normale Streams
+    // Lädt Standard-.m3u8-Kanäle im Videoplayer
     resetPlayerArea();
     playChannel(index);
 }
@@ -322,7 +321,7 @@ function playStream(url, name) {
     }
 }
 
-// Startet den Ladevorgang beim Seitenaufruf automatisch
+// Startet die App automatisch
 loadPlaylist();
 </script>
 
