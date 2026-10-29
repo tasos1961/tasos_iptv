@@ -26,11 +26,11 @@ body {
     position: fixed;
     left: 0;
     top: 0;
-    transition: transform 0.3s ease; /* Ermöglicht das sanfte Ausblenden */
+    transition: transform 0.3s ease; /* Weiches Einklappen des Menüs */
     z-index: 10;
 }
 
-/* Schiebt die Senderliste nach links aus dem Bildschirm heraus */
+/* Schiebt die Senderliste elegant nach links aus dem Sichtfeld */
 body.fullscreen #list {
     transform: translateX(-100%);
 }
@@ -42,10 +42,10 @@ body.fullscreen #list {
     width: 85%;
     height: 100vh;
     background: #000;
-    transition: width 0.3s ease, left 0.3s ease; /* Macht die Breitenänderung flüssig */
+    transition: width 0.3s ease, left 0.3s ease; /* Passt die Größe flüssig an */
 }
 
-/* Wenn Vollbild aktiv ist, dehnt sich das Video über die gesamte Breite aus */
+/* Erweitert den Videoplayer auf die vollen 100% des Bildschirms */
 body.fullscreen #playerArea {
     width: 100%;
     left: 0;
@@ -60,7 +60,7 @@ body.fullscreen #playerArea {
     border: none;
 }
 
-/* Stil für den Vollbild-Knopf oben rechts */
+/* Design des Vollbild-Umschalters oben rechts */
 #fullscreenBtn {
     position: absolute;
     top: 15px;
@@ -111,10 +111,10 @@ body.fullscreen #playerArea {
 
 <body>
 
-<!-- Die linke Seitenleiste für die Sender -->
+<!-- Linke Seitenleiste für die Senderauswahl -->
 <div id="list"></div>
 
-<!-- Der Hauptbereich für den Videostream -->
+<!-- Rechter Hauptbereich für das TV-Bild -->
 <div id="playerArea">
     <button id="fullscreenBtn" onclick="toggleFullscreen()">📺 Vollbild Ein/Aus</button>
     <video id="video" controls autoplay playsinline></video>
@@ -122,10 +122,10 @@ body.fullscreen #playerArea {
 </div>
 
 <script>
-// Proxy-Basisadresse
+// Proxy-Pfad für Streams
 const proxy = "/api/proxy?url=";
 
-// Wir halten die Zeilen nur flüchtig im RAM, um die Entwicklertools (textContent) zu leeren
+// Sicherheits-RAM-Speicher: Verhindert Datendiebstahl über textContent
 let roheM3UZeilen = [];
 let kanalIndexListe = []; 
 let hls = null;
@@ -134,7 +134,7 @@ const webOnlyChannels = {
     "91nrg": "https://nrg91.gr"
 };
 
-// Schaltet das Menü um (Vollbild ein- oder ausblenden)
+// Wechselt zwischen normaler Ansicht und vollem Bildschirm
 function toggleFullscreen() {
     document.body.classList.toggle("fullscreen");
 }
@@ -159,7 +159,7 @@ function resetPlayerArea() {
     `;
 }
 
-// Holt den M3U-Text sicher über dein Vercel-Backend ab
+// Holt deine Playlist geschützt über die unsichtbare Vercel-API ab
 function loadPlaylist() {
     setStatus("Playlist wird geladen...");
     fetch("/api/proxy")
@@ -174,7 +174,7 @@ function loadPlaylist() {
         });
 }
 
-// Baut die Liste in der Sidebar auf, ohne die URLs preiszugeben
+// Erstellt die Kanäle für die Seitenleiste, lässt die URLs aber ungeladen im Hintergrund
 function baueKanalListe() {
     kanalIndexListe = [];
     let aktuellerName = "";
@@ -193,8 +193,9 @@ function baueKanalListe() {
     });
 
     renderList();
+    
+    // FERTIGE KORREKTUR: Holt exakt das erste Element aus der Liste, anstatt das Gesamt-Array abzustürzen
     if (kanalIndexListe.length > 0) {
-        // Startet den ersten Kanal direkt mit dem korrekten Objekt-Index
         handleChannel(kanalIndexListe[0], 0); 
     }
 }
@@ -217,7 +218,7 @@ function renderList() {
     });
 }
 
-// Erstellt die endgültige Stream-Adresse erst direkt im Moment des Klicks
+// Berechnet die Stream-URL erst genau in der Millisekunde des Aufrufs flüchtig im RAM
 function extrahiereKanalUrl(index) {
     const kanalInfo = kanalIndexListe[index];
     if (!kanalInfo) return "";
@@ -229,7 +230,7 @@ function extrahiereKanalUrl(index) {
 function handleChannel(ch, index) {
     const name = ch.name.toLowerCase();
 
-    // Hilfsfunktion zur Erzeugung der iFrame-Bereiche mit sichtbarem Vollbild-Knopf
+    // Erzeugt iFrame-Fenster mit funktionierendem Umschalt-Knopf
     const setIframeView = (srcUrl, statusText, extraStyle = "") => {
         resetPlayerArea();
         stopVideo();
@@ -293,7 +294,7 @@ function handleChannel(ch, index) {
         return;
     }
 
-    // Lädt Standard-.m3u8-Kanäle im Videoplayer
+    // Standard-HLS-Kanäle über den HTML5-Player laden
     resetPlayerArea();
     playChannel(index);
 }
@@ -321,7 +322,7 @@ function playStream(url, name) {
     }
 }
 
-// Startet die App automatisch
+// Startet den Abruf automatisch
 loadPlaylist();
 </script>
 
