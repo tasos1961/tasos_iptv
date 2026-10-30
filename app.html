@@ -205,19 +205,13 @@ if (name.toLowerCase().includes("delta")) {
     stopVideo();
     document.getElementById("playerArea").innerHTML = `
         <video id="video" controls autoplay style="width:100%;height:100%;background:#000;"></video>
-        <div id="status">Ant HD (Clean-View)</div>
+        <div id="status">Ant1 HD (Clean-View)</div>
     `;
 
     const hls = new Hls();
     hls.loadSource(proxy + encodeURIComponent("https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8"));
     hls.attachMedia(document.getElementById("video"));
 }
-
-
-
-
-
-
 
 
     if (name.toLowerCase() === "ant1web") {
