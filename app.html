@@ -185,11 +185,17 @@ function handleChannel(ch, index) {
         return;
   }
 
-    // KORREKTUR: Lädt genau deine gefundene URL sicher über das Vercel-Backend!
-    if (name.includes("delta evros") || name.includes("delta")) {
-        setIframeView(proxy + encodeURIComponent("http://213.16.128.6:8101/deltatv/live.php"), "Delta TV Live (Web-View)");
+    if (name.toLowerCase() === "delta evros") {
+    resetPlayerArea();
+    stopVideo();
+    document.getElementById("playerArea").innerHTML = `
+            <iframe src="http://213.16.128.6:8101/deltatv/live.php"
+                style="width:100%;height:100%;border:none;background:#000;"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div id="status">Delat Live (Clean-View)</div>
+        `;
         return;
-    }
+  }
 
 
     if (name.toLowerCase() === "ant1web") {
