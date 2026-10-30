@@ -1,5 +1,17 @@
 export default async function handler(req, res) {
-    // 🔒 Login‑Check
+    // 🧩 1. CORS‑Vorabprüfung (OPTIONS / Preflight) für Smart-TVs abfangen
+    // Das bricht die Sperre für den Sender 81.171.10.42 komplett auf!
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,POST,OPTIONS");
+    res.setHeader("X-Frame-Options", "ALLOWALL");
+    res.setHeader("Content-Security-Policy", "frame-ancestors *");
+
+    if (req.method === "OPTIONS") {
+        return res.status(200).end();
+    }
+
+    // 🔒 2. Login‑Check
     const cookies = req.headers.cookie || '';
     if (!cookies.includes('authorized_user=true')) {
         return res.status(403).send("Zugriff verweigert. Bitte zuerst einloggen!");
@@ -10,7 +22,7 @@ export default async function handler(req, res) {
         return res.status(400).send("Missing ?url=");
     }
 
-    // 🧩 Standard‑Header
+    // 🧩 3. Standard‑Header (inklusive getarnter Identität)
     let headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:117.0) Gecko/20100101 Firefox/117.0",
         "Accept": "*/*",
@@ -21,7 +33,7 @@ export default async function handler(req, res) {
         "Origin": ""
     };
 
-    // 🧩 Spezial‑Header für Skai‑Domains
+    // 🧩 4. Spezial‑Header für Skai‑Domains
     const isSkai =
         target.includes("skai.gr") ||
         target.includes("player.skai.gr") ||
@@ -45,20 +57,13 @@ export default async function handler(req, res) {
         const contentType = response.headers.get("content-type") || "application/octet-stream";
         res.setHeader("Content-Type", contentType);
 
-        // 🧩 CORS‑Freigabe und Frame‑Erlaubnis
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Headers", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,POST,OPTIONS");
-        res.setHeader("X-Frame-Options", "ALLOWALL");
-        res.setHeader("Content-Security-Policy", "frame-ancestors *");
-
-        // 🧩 Nicht‑HTML → direkt weiterleiten (z. B. .m3u8, .ts, .jpg)
+        // 🧩 5. Nicht‑HTML → direkt weiterleiten (Wichtig für .m3u8 und .ts-Videosegmente deines Senders!)
         if (!contentType.includes("text/html")) {
             const buffer = Buffer.from(await response.arrayBuffer());
             return res.send(buffer);
         }
 
-        // 🧩 HTML laden
+        // 🧩 6. HTML laden (für MegaWeb und SkaiWeb)
         let html = await response.text();
 
         // 🧩 MegaWeb‑Optimierung
