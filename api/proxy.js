@@ -58,10 +58,16 @@ export default async function handler(req, res) {
         res.setHeader("Content-Type", contentType);
 
         // 🧩 5. Nicht‑HTML → direkt weiterleiten (Wichtig für .m3u8 und .ts-Videosegmente deines Senders!)
+        // 🧩 5. Nicht‑HTML → Korrigierte Weiterleitung für Player-Skripte und Streams
         if (!contentType.includes("text/html")) {
-            const buffer = Buffer.from(await response.arrayBuffer());
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            
+            // Reiche den exakten Statuscode des Zielservers weiter
+            res.status(response.status);
             return res.send(buffer);
         }
+
 
         // 🧩 6. HTML laden (für MegaWeb und SkaiWeb)
         let html = await response.text();
