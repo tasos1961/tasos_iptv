@@ -9,7 +9,15 @@
         html, body { background: #111; color: white; font-family: sans-serif; margin: 0; padding: 0; width: 100%; height: 100%; }
         .wrapper { width: 100%; text-align: center; padding-top: 15vh; }
         .box { display: inline-block; text-align: center; padding: 30px; border: 1px solid #333; border-radius: 8px; background: #161616; width: 300px; }
+        
         input { padding: 12px; border: 1px solid #444; background: #222; color: white; border-radius: 4px; width: 90%; margin-bottom: 15px; box-sizing: border-box; font-size: 16px; }
+        
+        /* Unsichtbarkeits-Schutz: Versteckt die getippten Punkte im Passwortfeld komplett vor Zuschauern */
+        #pw {
+            color: transparent !important;
+            text-shadow: 0 0 0 #222; /* Schreibt unsichtbaren Text in der Farbe des Eingabefeldes */
+        }
+        
         button { padding: 12px 20px; background: #0070f3; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; }
         button:hover { background: #0062d2; }
     </style>
@@ -19,19 +27,31 @@
     <div class="wrapper">
         <div class="box">
             <h2>Playlist Login</h2>
-            <input type="text" id="username" placeholder="Dein Name">
-            <input type="password" id="pw" placeholder="Dein Passwort">
+            
+            <!-- Unsichtbarer Dummy-Nutzer: Verwirrt automatische Passwort-Manager von Browsern -->
+            <input type="text" style="display:none;" autocomplete="username">
+            
+            <input type="text" id="username" placeholder="Dein Name" autocomplete="off">
+            
+            <!-- Passwortfeld mit integrierten Speichersperren (autocomplete & Kopiersperre) -->
+            <input type="password" 
+                   id="pw" 
+                   placeholder="Dein Passwort" 
+                   autocomplete="new-password" 
+                   onpaste="return false;" 
+                   dropzone="none">
+                   
             <button onclick="checkLogin()">Einloggen</button>
         </div>
     </div>
 
     <script>
-        // Automatischer Weiterleitungs-Schutz: Wenn ein gültiges Cookie da ist, direkt zur App springen
+        // Automatischer Weiterleitungs-Schutz: Wenn das Cookie bereits existiert, direkt zur App springen
         if (document.cookie.indexOf("authorized_user=true") !== -1) {
             window.location.href = "/";
         }
 
-        // Deine Benutzerliste inklusive dem neuen Test-User
+        // Deine festgelegte Benutzerliste
         const ERLAUBTE_NUTZER = {
             "test": "6543",
             "user1": "6543",
@@ -50,27 +70,30 @@
 
             if (ERLAUBTE_NUTZER[nameInput] && ERLAUBTE_NUTZER[nameInput] === passwordInput) {
                 
-                // Standardzeit für normale User (user2, user3): 31 Tage (in Sekunden)
+                // Standardzeit für normale User (user2, user3): 31 Tage (in Sekunden angegeben)
                 let cookieDauer = 31 * 24 * 60 * 60; 
 
-                // Sonderregelung: Wenn der User "test" ist, läuft das Cookie nach 1 Tag ab
+                // Sonderregelung 1: Wenn der User "test" ist, läuft das Cookie nach exakt 1 Tag ab
                 if (nameInput === "test") {
                     cookieDauer = 1 * 24 * 60 * 60; 
                 }
-                // Sonderregelung: Wenn der User "user1" ist, läuft das Cookie nach exakt 2 Tagen ab
+                // Sonderregelung 2: Wenn der User "user1" ist, läuft das Cookie nach exakt 2 Tagen ab
                 else if (nameInput === "user1") {
-                    cookieDauer = 2 * 24 * 60 * 60;
+                    cookieDauer = 2 * 24 * 60 * 60; 
                 }
                 
-                // Cookie setzen mit der dynamischen Ablaufzeit (ohne SameSite/Secure für Smart-TV Kompatibilität)
+                // Cookie setzen mit der dynamischen Ablaufzeit
+                // "SameSite" und "Secure" bleiben weg für die maximale Kompatibilität mit alten Fernsehern
                 document.cookie = "authorized_user=true; path=/; max-age=" + cookieDauer;
                 
-                // Weiterleitung zur Playlist
+                // Sofortige Weiterleitung zur Hauptseite
                 window.location.href = "/";
             } else {
                 alert("Name oder Passwort ist falsch!");
             }
         }
     </script>
+</body>
+</html>
 </body>
 </html>
