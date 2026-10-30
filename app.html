@@ -194,16 +194,14 @@ function handleChannel(ch, index) {
     const korrekteLiveUrl = "http://213.16.128.6:8101/deltatv/live.php";
     
     // proxy + encodeURIComponent macht daraus ein sicheres HTTPS-Signal für Vercel/Smart-TV
-    document.getElementById("playerArea").innerHTML = `
-            
-            <iframe src="${proxy + encodeURIComponent(korrekteLiveUrl)}"
+    document.getElementById("playerArea").innerHTML = `   
+            <iframe src="${proxy + encodeURIComponent('http://213.16.128.6:8101/deltatv/live.php')}"
                 style="width:100%;height:100%;border:none;background:#000;"
                 sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
             <div id="status">Delta Live (Clean-View)</div>
         `;
     return;
   }
-##<button id="fullscreenBtn" onclick="toggleFullscreen()">📺 Vollbild Ein/Aus</button>
 
 
     if (name.toLowerCase() === "ant1web") {
