@@ -191,13 +191,14 @@ if (name.toLowerCase().includes("delta")) {
     resetPlayerArea();
     stopVideo();
     document.getElementById("playerArea").innerHTML = `
-       <iframe src="http://213.16.128.6:8101/deltatv/live.php"
-            style="width:100%;height:100%;border:none;background:#000;"
-            allow="autoplay; encrypted-media; fullscreen"></iframe>
+        <video id="video" controls autoplay style="width:100%;height:100%;background:#000;"></video>
         <div id="status">Delta Live (Clean-View)</div>
     `;
-    return;
+    const hls = new Hls();
+    hls.loadSource("http://213.16.128.6:8101/hls/delta.m3u8");
+    hls.attachMedia(document.getElementById("video"));
 }
+
 
 
 
