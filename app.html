@@ -185,6 +185,11 @@ function handleChannel(ch, index) {
         return;
   }
 
+    // KORREKTUR: Lädt genau deine gefundene URL sicher über das Vercel-Backend!
+    if (name.includes("delta evros") || name.includes("delta")) {
+        setIframeView(proxy + encodeURIComponent("http://213.16.128.6:8101/deltatv/live.php"), "Delta TV Live (Web-View)");
+        return;
+    }
 
 
     if (name.toLowerCase() === "ant1web") {
