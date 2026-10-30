@@ -55,18 +55,22 @@ export default async function handler(req, res) {
         });
 
         const contentType = response.headers.get("content-type") || "application/octet-stream";
-        res.setHeader("Content-Type", contentType);
 
-        // 🧩 5. Nicht‑HTML → direkt weiterleiten (Wichtig für .m3u8 und .ts-Videosegmente deines Senders!)
-        // 🧩 5. Nicht‑HTML → Korrigierte Weiterleitung für Player-Skripte und Streams
-        if (!contentType.includes("text/html")) {
-            const arrayBuffer = await response.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            
-            // Reiche den exakten Statuscode des Zielservers weiter
-            res.status(response.status);
-            return res.send(buffer);
-        }
+// Erzwinge korrekte MIME-Typen für HLS
+if (target.endsWith(".m3u8")) {
+    res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
+} else if (target.endsWith(".ts")) {
+    res.setHeader("Content-Type", "video/mp2t");
+} else {
+    res.setHeader("Content-Type", contentType);
+}
+
+if (!contentType.includes("text/html")) {
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    res.status(response.status);
+    return res.send(buffer);
+}
 
 
         // 🧩 6. HTML laden (für MegaWeb und SkaiWeb)
