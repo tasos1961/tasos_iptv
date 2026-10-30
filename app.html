@@ -195,7 +195,7 @@ function handleChannel(ch, index) {
     
     // proxy + encodeURIComponent macht daraus ein sicheres HTTPS-Signal für Vercel/Smart-TV
     document.getElementById("playerArea").innerHTML = `
-            <button id="fullscreenBtn" onclick="toggleFullscreen()">📺 Vollbild Ein/Aus</button>
+            
             <iframe src="${proxy + encodeURIComponent(korrekteLiveUrl)}"
                 style="width:100%;height:100%;border:none;background:#000;"
                 sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
@@ -203,7 +203,7 @@ function handleChannel(ch, index) {
         `;
     return;
   }
-
+##<button id="fullscreenBtn" onclick="toggleFullscreen()">📺 Vollbild Ein/Aus</button>
 
 
     if (name.toLowerCase() === "ant1web") {
