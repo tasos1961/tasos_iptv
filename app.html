@@ -186,6 +186,19 @@ function handleChannel(ch, index) {
         return;
   }
 
+    if (name.toLowerCase().includes("4e")) {
+    resetPlayerArea();
+    stopVideo();
+    document.getElementById("playerArea").innerHTML = `
+        <video id="video" controls autoplay playsinline
+               style="width:100%;height:100%;background:#000;"
+               src="http://eu2.tv4e.gr:1935/live/myStream.sdp/playlist.m3u8">
+        </video>
+        <div id="status">4E Live (Direct Playback)</div>
+    `;
+    return;
+}
+
     
     if (name.toLowerCase().includes("ant1free")) {
     resetPlayerArea();
