@@ -97,7 +97,8 @@ let hls = null;
 const webOnlyChannels = {
     // "eurogr": "https://gr.euronews.com/live",   ← AUSGEBLENDET
     "91nrg": "https://nrg91.gr/tv/",
-    "delta": "http://213.16.128.6:8101/deltatv/live.php"
+    "delta": "http://213.16.128.6:8101/deltatv/live.php",
+     "4E": "https//eu2.tv4e.gr:1935/live/myStream.sdp/playlist.m3u8"
 };
 
 function setStatus(msg) {
@@ -186,20 +187,7 @@ function handleChannel(ch, index) {
         return;
   }
 
-    if (name.toLowerCase().includes("4e")) {
-    resetPlayerArea();
-    stopVideo();
-    document.getElementById("playerArea").innerHTML = `
-        <video id="video" controls autoplay playsinline
-               style="width:100%;height:100%;background:#000;"
-               src="http://eu2.tv4e.gr:1935/live/myStream.sdp/playlist.m3u8">
-        </video>
-        <div id="status">TV4E Live (Direct Browser Playback)</div>
-    `;
-    return;
-}
-
-
+    
     if (name.toLowerCase().includes("ant1free")) {
     resetPlayerArea();
     stopVideo();
