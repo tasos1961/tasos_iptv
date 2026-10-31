@@ -1,6 +1,5 @@
 export default async function handler(req, res) {
     // 🧩 1. CORS‑Vorabprüfung (OPTIONS / Preflight) für Smart-TVs abfangen
-    // Das bricht die Sperre für den Sender 81.171.10.42 komplett auf!
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Headers", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,POST,OPTIONS");
@@ -33,6 +32,25 @@ export default async function handler(req, res) {
         "Origin": ""
     };
 
+    // ⭐⭐⭐ ANT1FREE FIX — Smart‑TV Header + korrekter Referer ⭐⭐⭐
+    const isAnt1 =
+        target.includes("antennaplus.gr") ||
+        target.includes("antenna") ||
+        target.includes("media0/Ant1");
+
+    if (isAnt1) {
+        headers = {
+            ...headers,
+            "Referer": "https://www.antenna.gr/live",
+            "Origin": "https://www.antenna.gr",
+            "User-Agent": "Mozilla/5.0 (SMART-TV; Linux; Android 11; SofronovIPTV)",
+            "Accept": "*/*",
+            "Accept-Language": "el-GR,el;q=0.9,en;q=0.8",
+            "X-Forwarded-For": "2.84.1.22",   // GR-IP
+            "CF-IPCountry": "GR"
+        };
+    }
+
     // 🧩 4. Spezial‑Header für Skai‑Domains
     const isSkai =
         target.includes("skai.gr") ||
@@ -56,22 +74,21 @@ export default async function handler(req, res) {
 
         const contentType = response.headers.get("content-type") || "application/octet-stream";
 
-// Erzwinge korrekte MIME-Typen für HLS
-if (target.endsWith(".m3u8")) {
-    res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
-} else if (target.endsWith(".ts")) {
-    res.setHeader("Content-Type", "video/mp2t");
-} else {
-    res.setHeader("Content-Type", contentType);
-}
+        // Erzwinge korrekte MIME-Typen für HLS
+        if (target.endsWith(".m3u8")) {
+            res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
+        } else if (target.endsWith(".ts")) {
+            res.setHeader("Content-Type", "video/mp2t");
+        } else {
+            res.setHeader("Content-Type", contentType);
+        }
 
-if (!contentType.includes("text/html")) {
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    res.status(response.status);
-    return res.send(buffer);
-}
-
+        if (!contentType.includes("text/html")) {
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            res.status(response.status);
+            return res.send(buffer);
+        }
 
         // 🧩 6. HTML laden (für MegaWeb und SkaiWeb)
         let html = await response.text();
