@@ -33,18 +33,23 @@ export default async function handler(req, res) {
         target.includes("antenna") ||
         target.includes("media0/Ant1");
 
-    if (isAnt1) {
-        headers = {
-            ...headers,
-            "Referer": "https://www.antenna.gr/live",
-            "Origin": "https://www.antenna.gr",
-            "User-Agent": "Mozilla/5.0 (SMART-TV; Linux; Android 11; SofronovIPTV)",
-            "Accept": "*/*",
-            "Accept-Language": "el-GR,el;q=0.9,en;q=0.8",
-            "X-Forwarded-For": "2.84.1.22",
-            "CF-IPCountry": "GR"
-        };
-    }
+   if (isAnt1) {
+    headers = {
+        ...headers,
+        "Referer": "https://www.antenna.gr/live",
+        "Origin": "https://www.antenna.gr",
+        "User-Agent": "Mozilla/5.0 (SMART-TV; Linux; Android 11; SofronovIPTV)",
+        "Accept": "*/*",
+        "Accept-Language": "el-GR,el;q=0.9,en;q=0.8",
+        "X-Forwarded-For": "2.84.1.22",
+        "CF-IPCountry": "GR",
+        // 👉 zusätzlich:
+        "Host": "mcdn.antennaplus.gr",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1"
+    };
+}
+
 
     // 🧩 4. Spezial‑Header für Skai‑Domains
     const isSkai =
