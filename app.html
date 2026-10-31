@@ -196,10 +196,11 @@ function handleChannel(ch, index) {
 
 if (name.toLowerCase().includes("ant1free")) {
     stopVideo();
-    window.open("https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8", "_blank");
-    setStatus("ANT1 Free");
+    window.open(proxy + encodeURIComponent("https://mcdn.antennaplus.gr/live/media0/Ant1/HLS/Ant1.m3u8"), "_blank");
+    setStatus("ANT1 Free (New Tab)");
     return;
 }
+
     
     
     if (name.toLowerCase() === "ant1web") {
