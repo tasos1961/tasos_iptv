@@ -190,14 +190,15 @@ function handleChannel(ch, index) {
     resetPlayerArea();
     stopVideo();
     document.getElementById("playerArea").innerHTML = `
-        <video id="video" controls autoplay style="width:100%;height:100%;background:#000;"></video>
-        <div id="status">4E (Clean-View)</div>
+        <video id="video" controls autoplay playsinline
+               style="width:100%;height:100%;background:#000;"
+               src="http://eu2.tv4e.gr:1935/live/myStream.sdp/playlist.m3u8">
+        </video>
+        <div id="status">TV4E Live (Direct Browser Playback)</div>
     `;
-
-    const hls = new Hls();
-    hls.loadSource(proxy + encodeURIComponent("http://eu2.tv4e.gr:1935/live/myStream.sdp/playlist.m3u8"));
-    hls.attachMedia(document.getElementById("video"));
+    return;
 }
+
 
     if (name.toLowerCase().includes("ant1free")) {
     resetPlayerArea();
