@@ -193,6 +193,13 @@ function handleChannel(ch, index) {
     return;
 }
 
+if (name.toLowerCase().includes("thessalia")) {
+    stopVideo();
+    window.open("https://www.thessaliatv.gr/live/", "_blank");
+    setStatus("Thessalia im neuen Tab geöffnet");
+    return;
+}
+
 
 // if (name.toLowerCase().includes("ant1free")) {
  //   stopVideo();
