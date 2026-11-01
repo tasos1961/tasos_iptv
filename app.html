@@ -191,7 +191,7 @@ function handleChannel(ch, index) {
     return;
 }
 
-    // http://tv.nrg91.gr:1935/onweb/live/master.m3u8
+   
 if (name.toLowerCase().includes("91nrg")) {
     stopVideo();
     const newTab = window.open("", "_blank"); // Erst neuen Tab öffnen
@@ -199,6 +199,15 @@ if (name.toLowerCase().includes("91nrg")) {
     setStatus("91NRG im neuen Tab geöffnet");
     return;
 }
+
+    if (name.toLowerCase().includes("creta")) {
+    stopVideo();
+    const newTab = window.open("", "_blank"); // Erst neuen Tab öffnen
+    newTab.location.href = "https://live.streams.ovh:1935/tvcreta/tvcreta/playlist.m3u8"; // Dann URL setzen
+    setStatus("Creta im neuen Tab geöffnet");
+    return;
+}
+    //creta https://live.streams.ovh:1935/tvcreta/tvcreta/playlist.m3u8
 
 
 
