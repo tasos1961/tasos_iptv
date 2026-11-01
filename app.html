@@ -194,10 +194,11 @@ function handleChannel(ch, index) {
     // http://tv.nrg91.gr:1935/onweb/live/master.m3u8
 if (name.toLowerCase().includes("91nrg")) {
     stopVideo();
-    window.open(proxy + encodeURIComponent("http://tv.nrg91.gr:1935/onweb/live/master.m3u8"), "_blank");
+    window.open("http://tv.nrg91.gr:1935/onweb/live/master.m3u8", "_blank");
     setStatus("91NRG im neuen Tab geöffnet");
     return;
 }
+
 
 if (name.toLowerCase().includes("thessalia")) {
     stopVideo();
