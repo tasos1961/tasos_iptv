@@ -96,7 +96,7 @@ let hls = null;
 // Web‑Kanäle → öffnen im neuen Tab
 const webOnlyChannels = {
     // "eurogr": "https://gr.euronews.com/live",   ← AUSGEBLENDET
-    "91nrg": "https://nrg91.gr/tv/",
+    //"91nrg": "https://nrg91.gr/tv/",
     "delta": "http://213.16.128.6:8101/deltatv/live.php"
    };
 
@@ -190,6 +190,14 @@ function handleChannel(ch, index) {
     stopVideo();
     window.open("http://eu2.tv4e.gr:1935/live/myStream.sdp/playlist.m3u8", "_blank");
     setStatus("4E im neuen Tab geöffnet");
+    return;
+}
+
+    //http://tv.nrg91.gr:1935/onweb/live/master.m3u8
+ if (name.toLowerCase().includes("91nrg")) {
+    stopVideo();
+    window.open("http://tv.nrg91.gr:1935/onweb/live/master.m3u8", "_blank");
+    setStatus("91NRG im neuen Tab geöffnet");
     return;
 }
 
