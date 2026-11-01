@@ -194,8 +194,8 @@ function handleChannel(ch, index) {
     // http://tv.nrg91.gr:1935/onweb/live/master.m3u8
 if (name.toLowerCase().includes("91nrg")) {
     stopVideo();
-    window.open("http://tv.nrg91.gr:1935/onweb/live/master.m3u8", "_blank");
-    setStatus("91NRG im neuen Tab geöffnet");
+    window.location.href = "http://tv.nrg91.gr:1935/onweb/live/master.m3u8";
+    setStatus("91NRG direkt geöffnet");
     return;
 }
 
