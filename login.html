@@ -46,17 +46,18 @@
     </div>
 
     <script>
-        // Automatischer Weiterleitungs-Schutz: Wenn das Cookie bereits existiert, direkt zur App springen
+        // Automatischer Weiterleitungs-Schutz: Wenn ein gültiges Cookie da ist, direkt zur App springen
         if (document.cookie.indexOf("authorized_user=true") !== -1) {
             window.location.href = "/";
         }
 
-        // Deine festgelegte Benutzerliste
+        // Deine festgelegte Benutzerliste inklusive "frei"
         const ERLAUBTE_NUTZER = {
             "test": "6543",
             "user1": "6543",
             "user2": "6543",
-            "user3": "6543"
+            "user3": "6543",
+            "frei": "6543"
         };
 
         function checkLogin() {
@@ -70,20 +71,20 @@
 
             if (ERLAUBTE_NUTZER[nameInput] && ERLAUBTE_NUTZER[nameInput] === passwordInput) {
                 
-                // Standardzeit für normale User (user2, user3): 31 Tage (in Sekunden angegeben)
+                // 1. Standardzeit für normale User (user1, user2, user3): 31 Tage (in Sekunden)
                 let cookieDauer = 31 * 24 * 60 * 60; 
 
-                // Sonderregelung 1: Wenn der User "test" ist, läuft das Cookie nach exakt 1 Tag ab
+                // 2. Sonderregelung für "test": läuft nach exakt 3 Tagen ab
                 if (nameInput === "test") {
-                    cookieDauer = 1 * 24 * 60 * 60; 
+                    cookieDauer = 3 * 24 * 60 * 60; 
                 }
-                // Sonderregelung 2: Wenn der User "user1" ist, läuft das Cookie nach exakt 2 Tagen ab
-                else if (nameInput === "user1") {
-                    cookieDauer = 2 * 24 * 60 * 60; 
+                // 3. Sonderregelung für "frei": läuft nach exakt 1 Jahr (365 Tage) ab
+                else if (nameInput === "frei") {
+                    cookieDauer = 365 * 24 * 60 * 60;
                 }
                 
                 // Cookie setzen mit der dynamischen Ablaufzeit
-                // "SameSite" und "Secure" bleiben weg für die maximale Kompatibilität mit alten Fernsehern
+                // SameSite und Secure bleiben für Smart-TV Kompatibilität draußen
                 document.cookie = "authorized_user=true; path=/; max-age=" + cookieDauer;
                 
                 // Sofortige Weiterleitung zur Hauptseite
