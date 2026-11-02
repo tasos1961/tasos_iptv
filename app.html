@@ -208,6 +208,14 @@ if (name.toLowerCase().includes("epirus")) {
     return;
 }
 
+if (name.toLowerCase().includes("samiaki")) {
+    stopVideo();
+    const newTab = window.open("", "_blank"); // Erst neuen Tab öffnen
+    newTab.location.href = "https://live.cast-control.eu:1935/samiaki/samiaki/playlist.m3u8"; // Dann URL setzen
+    setStatus("samiaki Live");
+    return;
+}
+
 //https://gr.euronews.com/live
    
 if (name.toLowerCase().includes("91nrg")) {
