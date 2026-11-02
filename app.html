@@ -200,6 +200,14 @@ function handleChannel(ch, index) {
     return;
 }
 
+if (name.toLowerCase().includes("epirus")) {
+    stopVideo();
+    const newTab = window.open("", "_blank"); // Erst neuen Tab öffnen
+    newTab.location.href = "https://www.epirustv1.eu/"; // Dann URL setzen
+    setStatus("epirus Live");
+    return;
+}
+
 //https://gr.euronews.com/live
    
 if (name.toLowerCase().includes("91nrg")) {
