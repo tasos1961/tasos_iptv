@@ -191,6 +191,13 @@ function handleChannel(ch, index) {
     return;
 }
 
+ if (name.toLowerCase().includes("egnatia")) {
+    stopVideo();
+    window.open("https://video.streams.ovh:1936/egnatiatv/egnatiatv/index.m3u", "_blank");
+    setStatus("egnatia im neuen Tab geöffnet");
+    return;
+}
+
     //eurogr
    if (name.toLowerCase().includes("eurogr")) {
     stopVideo();
