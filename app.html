@@ -198,6 +198,13 @@ function handleChannel(ch, index) {
     return;
 }
 
+ if (name.toLowerCase().includes("mad")) {
+    stopVideo();
+    window.open("http://www.freeintertv.com/view/id-372/1-1-2-1?chname=greece&findch=1", "_blank");
+    setStatus("MAD im neuen Tab geöffnet");
+    return;
+}
+
     //eurogr
    if (name.toLowerCase().includes("eurogr")) {
     stopVideo();
