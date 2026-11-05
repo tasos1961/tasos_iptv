@@ -327,9 +327,6 @@ if (name.toLowerCase().includes("ant1free")) {
     return;
 }
 
-
-
-
     if (name === "makweb") {
         resetPlayerArea();
         stopVideo();
@@ -358,29 +355,23 @@ if (name.toLowerCase().includes("ant1free")) {
 const checkName = name.toLowerCase().replace(/_/g, " ").trim();
 
 // --- KANAL 1 ---
-if (checkName === "skai sp1") {
+if (name.toLowerCase() === "skai sp1") {
     resetPlayerArea();
     stopVideo();
     document.getElementById("playerArea").innerHTML = `
-        <iframe src="https://sportfmtv.gr"
+        <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-1"
             style="width:100%;height:100%;border:none;background:#000;"
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
         <div id="status">SKAI SP1 (Clean-View)</div>
     `;
-    if (typeof setStatus === "function") setStatus("SKAI SP1 im Iframe gestartet");
-    return;
+return;
 }
 
-if (checkName === "skai sp1 g") {
+if (name.toLowerCase().includes("skai_sp1_g")) {
+    resetPlayerArea();
     stopVideo();
-    window.focus(); // Holt den Fokus vom Iframe zurück!
-    document.getElementById("playerArea").innerHTML = ""; 
-
-    setTimeout(() => {
-        window.open("https://sportfmtv.gr", "_blank");
-    }, 50);
-    
-    if (typeof setStatus === "function") setStatus("fmt1 im neuen Tab geöffnet");
+    window.open("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-1", "_blank");
+    setStatus("FMT1 im neuen Tab geöffnet");
     return;
 }
 
