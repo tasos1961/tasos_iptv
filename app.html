@@ -354,7 +354,7 @@ if (name.toLowerCase().includes("ant1free")) {
    // Bereite den Namen vor: Alles klein machen und Leerzeichen/Unterstriche vereinheitlichen
 const checkName = name.toLowerCase().replace(/_/g, " ").trim();
 
-// --- KANAL 1 ---
+// --- SKAI SP 1 ---
 if (name.toLowerCase() === "skai sp1") {
     resetPlayerArea();
     stopVideo();
@@ -371,61 +371,48 @@ if (name.toLowerCase().includes("skai_sp1_g")) {
     resetPlayerArea();
     stopVideo();
     window.open("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-1", "_blank");
-    setStatus("FMT1 im neuen Tab geöffnet");
+    setStatus("SKAI SP1 im neuen Tab geöffnet");
     return;
 }
 
-// --- KANAL 2 ---
-if (checkName === "skai sp2") {
+
+    if (name.toLowerCase() === "skai sp2") {
     resetPlayerArea();
     stopVideo();
     document.getElementById("playerArea").innerHTML = `
-        <iframe src="https://sportfmtv.gr"
+        <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-2"
             style="width:100%;height:100%;border:none;background:#000;"
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
         <div id="status">SKAI SP2 (Clean-View)</div>
     `;
-    if (typeof setStatus === "function") setStatus("SKAI SP2 im Iframe gestartet");
-    return;
+return;
 }
 
-if (checkName === "skai sp2 g") {
+if (name.toLowerCase().includes("skai_sp2_g")) {
+    resetPlayerArea();
     stopVideo();
-    window.focus();
-    document.getElementById("playerArea").innerHTML = ""; 
-
-    setTimeout(() => {
-        window.open("https://sportfmtv.gr", "_blank");
-    }, 50);
-    
-    if (typeof setStatus === "function") setStatus("fmt2 im neuen Tab geöffnet");
+    window.open("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-2", "_blank");
+    setStatus("SKAI SP2 im neuen Tab geöffnet");
     return;
 }
 
-// --- KANAL 3 ---
-if (checkName === "skai sp3") {
+if (name.toLowerCase() === "skai sp3") {
     resetPlayerArea();
     stopVideo();
     document.getElementById("playerArea").innerHTML = `
-        <iframe src="https://sportfmtv.gr"
+        <iframe src="https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-3"
             style="width:100%;height:100%;border:none;background:#000;"
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
         <div id="status">SKAI SP3 (Clean-View)</div>
     `;
-    if (typeof setStatus === "function") setStatus("SKAI SP3 im Iframe gestartet");
-    return;
+return;
 }
 
-if (checkName === "skai sp3 g") {
+if (name.toLowerCase().includes("skai_sp3_g")) {
+    resetPlayerArea();
     stopVideo();
-    window.focus();
-    document.getElementById("playerArea").innerHTML = ""; 
-
-    setTimeout(() => {
-        window.open("https://sportfmtv.gr", "_blank");
-    }, 50);
-    
-    if (typeof setStatus === "function") setStatus("fmt3 im neuen Tab geöffnet");
+    window.open("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-3", "_blank");
+    setStatus("SKAI SP3 im neuen Tab geöffnet");
     return;
 }
 
