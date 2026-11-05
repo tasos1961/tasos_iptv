@@ -225,7 +225,13 @@ if (name.toLowerCase().includes("ru_sport")) {
     setStatus("ru_sport im neuen Tab geöffnet");
     return;
 }
-    
+
+if (name.toLowerCase().includes("vox")) {
+    stopVideo();
+    window.open("http://www.freeintertv.com/view/id-2208", "_blank");
+    setStatus("Vox im neuen Tab geöffnet");
+    return;
+}
 
     //eurogr
    if (name.toLowerCase().includes("eurogr")) {
