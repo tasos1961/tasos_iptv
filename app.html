@@ -369,12 +369,21 @@ if (name.toLowerCase().includes("ant1free")) {
 
 // 3. Abfrage für den zweiten Kanal (im neuen Tab)
 
-if (name.toLowerCase() === "skai_sp1_g") {
+if (name.toLowerCase().trim() === "skai_sp1_g") {
+    // 1. Video stoppen
     stopVideo();
+    
+    // 2. WICHTIG: Das Iframe komplett zerstören, um den Browser-Fokus zurückzuholen
+    document.getElementById("playerArea").innerHTML = ""; 
+    // Falls deine Funktion resetPlayerArea() das bereits tut, nutze stattdessen: resetPlayerArea();
+
+    // 3. Erst jetzt den Tab öffnen (wird nun nicht mehr als Pop-up blockiert)
     window.open("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-1", "_blank");
+    
     if (typeof setStatus === "function") setStatus("fmt1 im neuen Tab geöffnet");
     return;
 }
+
 
 
  if (name.toLowerCase() === "skai sp2") {
@@ -391,12 +400,21 @@ if (name.toLowerCase() === "skai_sp1_g") {
 }
 
 
-if (name.toLowerCase() === "skai_sp2_g") {
+if (name.toLowerCase().trim() === "skai_sp2_g") {
+    // 1. Video stoppen
     stopVideo();
+    
+    // 2. WICHTIG: Das Iframe komplett zerstören, um den Browser-Fokus zurückzuholen
+    document.getElementById("playerArea").innerHTML = ""; 
+    // Falls deine Funktion resetPlayerArea() das bereits tut, nutze stattdessen: resetPlayerArea();
+
+    // 3. Erst jetzt den Tab öffnen (wird nun nicht mehr als Pop-up blockiert)
     window.open("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-2", "_blank");
+    
     if (typeof setStatus === "function") setStatus("fmt2 im neuen Tab geöffnet");
     return;
 }
+
 
    if (name.toLowerCase() === "skai sp3") {
     resetPlayerArea();
@@ -412,12 +430,21 @@ if (name.toLowerCase() === "skai_sp2_g") {
 }
 
 
-if (name.toLowerCase() === "skai_sp3_g") {
+if (name.toLowerCase().trim() === "skai_sp3_g") {
+    // 1. Video stoppen
     stopVideo();
+    
+    // 2. WICHTIG: Das Iframe komplett zerstören, um den Browser-Fokus zurückzuholen
+    document.getElementById("playerArea").innerHTML = ""; 
+    // Falls deine Funktion resetPlayerArea() das bereits tut, nutze stattdessen: resetPlayerArea();
+
+    // 3. Erst jetzt den Tab öffnen (wird nun nicht mehr als Pop-up blockiert)
     window.open("https://www.sportfmtv.gr/el/media-video/sport-fm-linear-channel-3", "_blank");
+    
     if (typeof setStatus === "function") setStatus("fmt3 im neuen Tab geöffnet");
     return;
 }
+
     if (name === "pontos") {
         resetPlayerArea();
         stopVideo();
