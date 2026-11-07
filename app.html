@@ -208,6 +208,13 @@ function handleChannel(ch, index) {
 if (name.toLowerCase().includes("gr_clips")) {
     stopVideo();
     window.open("http://www.freeintertv.com/view/id-1736/1-1-2-1?chname=greece&findch=1", "_blank");
+    setStatus("GR Video im neuen Tab geöffnet");
+    return;
+}
+
+if (name.toLowerCase().includes("gr_music")) {
+    stopVideo();
+    window.open("http://www.freeintertv.com/view/id-2801/1-1-2-1?chname=greece&findch=1", "_blank");
     setStatus("GR Music im neuen Tab geöffnet");
     return;
 }
